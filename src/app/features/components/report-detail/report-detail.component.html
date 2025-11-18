@@ -1,0 +1,287 @@
+<div class="main-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="spinner-large"></div>
+    <p>Chargement du rapport...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage && !loading" class="card">
+    <div class="card-content">
+      <div class="alert alert-danger">
+        <span class="icon">⚠️</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+      <button class="btn btn-secondary" (click)="goBack()">Retour</button>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="successMessage" class="card">
+    <div class="card-content">
+      <div class="alert alert-success">
+        <span class="icon">✓</span>
+        <span>{{ successMessage }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Content -->
+  <div *ngIf="report && !loading">
+    
+    <!-- Informations principales -->
+    <div class="card">
+      <div class="card-content">
+        <h3>🔍 RAPPORT D'ANALYSE</h3>
+        
+        <div class="result-section">
+          <h4>📋 Informations sur l'entrée</h4>
+          <div class="info-box">
+            <p><strong>Type :</strong> {{ report.input_type }}</p>
+            <p><strong>Valeur analysée :</strong> {{ report.input_value }}</p>
+            <p>
+              <strong>Sévérité :</strong> 
+              <span class="badge" [ngClass]="getSeverityClass(report.severity)">
+                {{ report.severity }}
+              </span>
+            </p>
+            <p><strong>Score :</strong> {{ report.threat_score | number:'1.1-1' }}/100</p>
+            <p><strong>Moteur utilisé :</strong> {{ report.engine_used | uppercase }}</p>
+            <p><strong>Analyste :</strong> {{ report.analyst.username }}</p>
+            <p>
+              <strong>Statut :</strong> 
+              <span class="badge" [ngClass]="getStatusClass(report.status)">
+                {{ report.status }}
+              </span>
+            </p>
+            <hr>
+            <p><strong>Date de création :</strong> {{ formatDate(report.created_at) }}</p>
+            <p *ngIf="report.reviewed_at">
+              <strong>Date de révision :</strong> {{ formatDate(report.reviewed_at) }}
+            </p>
+            <hr>
+            <p><strong>Notes :</strong></p>
+            <div class="notes-content" [innerHTML]="report.notes || 'Aucune note'"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistiques VirusTotal -->
+    <div class="card" *ngIf="vtData">
+      <div class="card-content">
+        <h3>🛡️ Résultats VirusTotal</h3>
+        
+        <div class="stats-grid">
+          <div class="stat-card malicious">
+            <div class="stat-icon">🔴</div>
+            <div class="stat-number">{{ vtData.positives || 0 }}</div>
+            <div class="stat-label">Détections malveillantes</div>
+          </div>
+          
+          <div class="stat-card clean">
+            <div class="stat-icon">✅</div>
+            <div class="stat-number">{{ (vtData.total || 0) - (vtData.positives || 0) }}</div>
+            <div class="stat-label">Moteurs propres</div>
+          </div>
+          
+          <div class="stat-card neutral">
+            <div class="stat-icon">📊</div>
+            <div class="stat-number">{{ vtData.total || 0 }}</div>
+            <div class="stat-label">Total scanné</div>
+          </div>
+        </div>
+
+        <!-- Table des détections -->
+        <div *ngIf="getVTScans().length > 0">
+          <h4>Détails des scans</h4>
+          <table class="detection-table">
+            <thead>
+              <tr>
+                <th>Moteur antivirus</th>
+                <th>Résultat</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let scan of getVTScans()">
+                <td>{{ scan.engine }}</td>
+                <td>{{ scan.result }}</td>
+                <td>
+                  <span class="badge" [ngClass]="scan.detected ? 'badge-danger' : 'badge-success'">
+                    {{ scan.detected ? 'Détecté' : 'Propre' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p *ngIf="vtData.permalink" class="vt-link">
+          <a [href]="vtData.permalink" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+            Voir sur VirusTotal →
+          </a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Données OTX -->
+    <div class="card" *ngIf="otxData">
+      <div class="card-content">
+        <h3>🌐 Résultats AlienVault OTX</h3>
+        
+        <div class="info-box">
+          <p><strong>Nombre de Pulses :</strong> {{ otxData.pulse_count || 0 }}</p>
+        </div>
+
+        <div *ngIf="getOTXPulses().length > 0">
+          <h4>Pulses associés</h4>
+          <div class="pulse-list">
+            <div class="pulse-item" *ngFor="let pulse of getOTXPulses()">
+              <h5>{{ pulse.name }}</h5>
+              <p>{{ pulse.description }}</p>
+              <div class="pulse-tags">
+                <span class="tag" *ngFor="let tag of pulse.tags">{{ tag }}</span>
+              </div>
+              <p class="pulse-date">
+                <small>Créé le: {{ formatDate(pulse.created) }}</small>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Données IPInfo -->
+    <div class="card" *ngIf="ipinfoData">
+      <div class="card-content">
+        <h3>🌍 Informations géographiques (IPInfo)</h3>
+        
+        <div class="info-box">
+          <p *ngIf="ipinfoData.ip"><strong>Adresse IP :</strong> {{ ipinfoData.ip }}</p>
+          <p *ngIf="ipinfoData.city"><strong>Ville :</strong> {{ ipinfoData.city }}</p>
+          <p *ngIf="ipinfoData.region"><strong>Région :</strong> {{ ipinfoData.region }}</p>
+          <p *ngIf="ipinfoData.country"><strong>Pays :</strong> {{ ipinfoData.country }}</p>
+          <p *ngIf="ipinfoData.org"><strong>Organisation :</strong> {{ ipinfoData.org }}</p>
+          <p *ngIf="ipinfoData.loc"><strong>Localisation :</strong> {{ ipinfoData.loc }}</p>
+          <p *ngIf="ipinfoData.timezone"><strong>Fuseau horaire :</strong> {{ ipinfoData.timezone }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tâches associées -->
+    <div class="card">
+      <div class="card-content">
+        <h3>📝 Tâches associées</h3>
+        
+        <table class="detection-table" *ngIf="report.tasks && report.tasks.length > 0">
+          <thead>
+            <tr>
+              <th>Titre</th>
+              <th>Priorité</th>
+              <th>Statut</th>
+              <th>Assigné à</th>
+              <th>Échéance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let task of report.tasks">
+              <td>{{ task.title }}</td>
+              <td>{{ task.priority }}</td>
+              <td>{{ task.status }}</td>
+              <td>{{ task.assigned_to.username }}</td>
+              <td>{{ formatDate(task.due_date) }}</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <p *ngIf="!report.tasks || report.tasks.length === 0" class="no-data">
+          Aucune tâche associée à ce rapport.
+        </p>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card">
+      <div class="card-content">
+        <h3>⚙️ Actions</h3>
+        
+        <div class="button-group">
+          <!-- Actions Admin -->
+          <ng-container *ngIf="isAdmin">
+            <button class="btn btn-success" (click)="onReviewReport('approve')">
+              ✓ Approuver
+            </button>
+            <button class="btn btn-warning" (click)="onReviewReport('false_positive')">
+              ⚠ Faux Positif
+            </button>
+            <button class="btn" (click)="navigateToCreateMitigation()">
+              🛡️ Créer une Mitigation (AWS)
+            </button>
+            <button class="btn btn-secondary" (click)="goBack()">
+              ← Retour au Dashboard
+            </button>
+          </ng-container>
+
+          <!-- Actions Analyste -->
+          <ng-container *ngIf="isAnalyst">
+            <button class="btn" (click)="downloadPdf()">
+              📥 Télécharger le PDF
+            </button>
+            <button class="btn btn-secondary" (click)="navigateToSendToAdmin()">
+              📤 Envoyer à l'administrateur
+            </button>
+            <button class="btn btn-secondary" (click)="navigateToCreateTask()">
+              ➕ Créer une tâche
+            </button>
+            <button class="btn btn-secondary" (click)="goBack()">
+              ← Retour
+            </button>
+          </ng-container>
+        </div>
+
+        <!-- Formulaire de mise à jour du statut (Admin uniquement) -->
+        <div *ngIf="isAdmin" class="status-update-section">
+          <hr>
+          <h4>Mettre à jour le statut et les notes</h4>
+          
+          <form [formGroup]="statusForm" (ngSubmit)="onUpdateStatus()">
+            <div class="form-group">
+              <label for="status" class="form-label">Nouveau statut</label>
+              <select id="status" class="form-control" formControlName="status">
+                <option value="pending">En attente</option>
+                <option value="reviewed">Examiné</option>
+                <option value="mitigated">Atténué</option>
+                <option value="false_positive">Faux positif</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="notes" class="form-label">Notes (Admin)</label>
+              <textarea 
+                id="notes" 
+                class="form-control" 
+                formControlName="notes"
+                rows="5"
+                placeholder="Ajoutez vos notes..."
+              ></textarea>
+            </div>
+
+            <button 
+              type="submit" 
+              class="btn btn-secondary"
+              [disabled]="statusForm.invalid || isUpdatingStatus"
+            >
+              <span *ngIf="!isUpdatingStatus">💾 Mettre à jour</span>
+              <span *ngIf="isUpdatingStatus">
+                <span class="spinner"></span> Mise à jour...
+              </span>
+              
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,82 @@
+<div class="main-container">
+  <div class="card form-container">
+    <div class="card-content">
+      <div class="header-section">
+        <h3 class="page-title">Envoyer à un Administrateur</h3>
+        <p class="report-info">
+          Rapport : <span class="report-title">{{ reportTitle }}</span>
+        </p>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert alert-error">
+        <span class="icon">⚠️</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div *ngIf="successMessage" class="alert alert-success">
+        <span class="icon">✓</span>
+        <span>{{ successMessage }}</span>
+      </div>
+
+      <form (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label class="form-label" for="admin">
+            Sélectionner un administrateur <span class="required">*</span>
+          </label>
+          <div class="select-wrapper">
+            <select
+              id="admin"
+              class="form-control"
+              [(ngModel)]="selectedAdminId"
+              name="admin"
+              required
+            >
+              <option value="" disabled>Choisir un administrateur</option>
+              <option *ngFor="let admin of adminUsers" [value]="admin.id">
+                {{ admin.username }}
+                <span *ngIf="admin.first_name || admin.last_name">
+                  ({{ admin.first_name }} {{ admin.last_name }})
+                </span>
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="message">
+            Message (optionnel)
+          </label>
+          <textarea
+            id="message"
+            class="form-control"
+            [(ngModel)]="message"
+            name="message"
+            rows="5"
+            placeholder="Ajoutez un message pour l'administrateur..."
+          ></textarea>
+        </div>
+
+        <div class="button-group">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="isSubmitting || !selectedAdminId"
+          >
+            <span *ngIf="!isSubmitting">Envoyer</span>
+            <span *ngIf="isSubmitting">
+              <span class="spinner"></span> Envoi en cours...
+            </span>
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="onCancel()"
+            [disabled]="isSubmitting"
+          >
+            Annuler
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

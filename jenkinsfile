@@ -1,0 +1,69 @@
+pipeline {
+    agent any
+
+    environment {
+        SONAR_TOKEN = credentials('SONAR_TOKEN') // Configure ce secret dans Jenkins
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: 'https://ton-repo-git.git', branch: 'main'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            parallel {
+                stage('Angular') {
+                    steps {
+                        dir('angular') {
+                            withSonarQubeEnv('SonarQube') {
+                                sh "sonar-scanner -Dsonar.projectKey=angular_app -Dsonar.sources=src -Dsonar.login=$SONAR_TOKEN"
+                            }
+                        }
+                    }
+                }
+                stage('Django') {
+                    steps {
+                        dir('django') {
+                            withSonarQubeEnv('SonarQube') {
+                                sh "sonar-scanner -Dsonar.projectKey=django_app -Dsonar.sources=. -Dsonar.login=$SONAR_TOKEN"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                sh 'docker-compose build'
+            }
+        }
+
+        stage('Test Angular') {
+            steps {
+                dir('angular') {
+                    sh 'npm install'
+                    sh 'npm run test -- --watch=false'
+                }
+            }
+        }
+
+        stage('Test Django') {
+            steps {
+                dir('django') {
+                    sh 'pip install -r requirements.txt'
+                    sh 'python manage.py test'
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh 'docker-compose down'
+                sh 'docker-compose up -d'
+            }
+        }
+    }
+}

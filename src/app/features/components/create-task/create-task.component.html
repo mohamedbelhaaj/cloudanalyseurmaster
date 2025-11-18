@@ -1,0 +1,143 @@
+<div class="main-container">
+  <div class="card form-container">
+    <div class="card-content">
+      <div class="header-section">
+        <h3 class="page-title">Créer une nouvelle tâche</h3>
+        <p class="report-info">
+          Pour le rapport : <span class="report-title">{{ reportTitle }}</span>
+        </p>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-alert">
+        <span class="error-icon">⚠</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <form [formGroup]="taskForm" (ngSubmit)="onSubmit()">
+        <!-- Titre -->
+        <div class="form-group">
+          <label class="form-label" for="title">
+            Titre <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="title"
+            class="form-control"
+            formControlName="title"
+            placeholder="Entrez le titre de la tâche"
+            [class.invalid]="isFieldInvalid('title')"
+          />
+          <div *ngIf="isFieldInvalid('title')" class="error-message">
+            {{ getFieldError('title') }}
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label class="form-label" for="description">
+            Description <span class="required">*</span>
+          </label>
+          <textarea
+            id="description"
+            class="form-control"
+            formControlName="description"
+            rows="5"
+            placeholder="Décrivez la tâche en détail"
+            [class.invalid]="isFieldInvalid('description')"
+          ></textarea>
+          <div *ngIf="isFieldInvalid('description')" class="error-message">
+            {{ getFieldError('description') }}
+          </div>
+        </div>
+
+        <!-- Priorité -->
+        <div class="form-group">
+          <label class="form-label" for="priority">
+            Priorité <span class="required">*</span>
+          </label>
+          <div class="select-wrapper">
+            <select
+              id="priority"
+              class="form-control"
+              formControlName="priority"
+              [class.invalid]="isFieldInvalid('priority')"
+            >
+              <option *ngFor="let priority of priorities" [value]="priority.value">
+                {{ priority.label }}
+              </option>
+            </select>
+          </div>
+          <div *ngIf="isFieldInvalid('priority')" class="error-message">
+            {{ getFieldError('priority') }}
+          </div>
+        </div>
+
+        <!-- Assigner à -->
+        <div class="form-group">
+          <label class="form-label" for="assigned_to">
+            Assigner à <span class="required">*</span>
+          </label>
+          <div class="select-wrapper">
+            <select
+              id="assigned_to"
+              class="form-control"
+              formControlName="assigned_to"
+              [class.invalid]="isFieldInvalid('assigned_to')"
+            >
+              <option value="" disabled selected>Sélectionnez un administrateur</option>
+              <option *ngFor="let user of adminUsers" [value]="user.id">
+                {{ user.username }} 
+                <span *ngIf="user.first_name || user.last_name">
+                  ({{ user.first_name }} {{ user.last_name }})
+                </span>
+              </option>
+            </select>
+          </div>
+          <div *ngIf="isFieldInvalid('assigned_to')" class="error-message">
+            {{ getFieldError('assigned_to') }}
+          </div>
+        </div>
+
+        <!-- Date d'échéance -->
+        <div class="form-group">
+          <label class="form-label" for="due_date">
+            Date d'échéance <span class="required">*</span>
+          </label>
+          <input
+            type="datetime-local"
+            id="due_date"
+            class="form-control"
+            formControlName="due_date"
+            [min]="minDate"
+            [class.invalid]="isFieldInvalid('due_date')"
+          />
+          <div *ngIf="isFieldInvalid('due_date')" class="error-message">
+            {{ getFieldError('due_date') }}
+          </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="button-group">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="isSubmitting || taskForm.invalid"
+          >
+            <span *ngIf="!isSubmitting">Créer la tâche</span>
+            <span *ngIf="isSubmitting">
+              <span class="spinner"></span> Création en cours...
+            </span>
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="onCancel()"
+            [disabled]="isSubmitting"
+          >
+            Annuler
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

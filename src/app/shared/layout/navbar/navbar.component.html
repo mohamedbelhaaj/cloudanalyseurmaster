@@ -1,0 +1,69 @@
+<nav class="navbar">
+  <div class="navbar-container">
+    <a routerLink="/dashboard" class="brand-link">
+      <!-- SVG shield modern -->
+      <span class="brand-icon">
+        <svg width="28" height="28" viewBox="0 0 28 28"><path d="M14 2l10 4v6c0 7-8.5 12-10 12S4 19 4 12V6z" fill="#fff"/><path d="M14 3.2l9 3.6v5.2c0 6.47-7.6 11-9 11s-9-4.53-9-11V6.8z" fill="#22c55e" opacity="0.3"/></svg>
+      </span>
+      <span class="brand-text">Threat Analyzer</span>
+    </a>
+
+    <div class="navbar-menu">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">
+          <svg width="19" height="19" viewBox="0 0 24 24"><rect x="3" y="5" width="14" height="14" rx="3" fill="#fff"/><path d="M17 12h-8m8 0l-3-3m3 3l-3 3" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        Dashboard
+      </a>
+      <a routerLink="/reports" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">
+          <svg width="19" height="19" viewBox="0 0 24 24"><rect x="3" y="5" width="14" height="14" rx="3" fill="#fff"/><path d="M17 12h-8m8 0l-3-3m3 3l-3 3" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/></svg>
+       </span>
+        Reports
+      </a>
+      <a routerLink="/mitigations" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">
+        </span>
+        Mitigations
+      </a>
+      <a routerLink="/tasks" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">
+          <svg width="19" height="19" viewBox="0 0 24 24"><rect x="3" y="5" width="14" height="14" rx="3" fill="#fff"/><path d="M17 12h-8m8 0l-3-3m3 3l-3 3" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        Tasks
+      </a>
+      <a routerLink="/analyze" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">
+          <svg width="19" height="19" viewBox="0 0 24 24"><rect x="3" y="5" width="14" height="14" rx="3" fill="#fff"/><path d="M17 12h-8m8 0l-3-3m3 3l-3 3" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        Analyze
+      </a>
+    </div>
+
+    <div class="navbar-user" *ngIf="currentUser$ | async as user">
+      <!-- Notification bouton avec badge animé -->
+      <button class="notification-btn">
+        <span class="notify-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <path d="M18 16v-5a6 6 0 00-12 0v5a2 2 0 01-2 2h16a2 2 0 01-2-2z" fill="#f59e42"/>
+          </svg>
+          <span class="notify-badge"></span>
+        </span>
+      </button>
+      <!-- Utilisateur/avatar -->
+      <div class="user-info" tabindex="0">
+        <div class="user-avatar">{{ user.username.charAt(0).toUpperCase() }}</div>
+        <div class="user-details">
+          <div class="user-name">{{ user.username }}</div>
+          <div class="user-role">{{ user.role }}</div>
+        </div>
+      </div>
+      <button class="btn-logout" (click)="logout()">
+        <span>
+          <svg width="19" height="19" viewBox="0 0 24 24"><rect x="3" y="5" width="14" height="14" rx="3" fill="#fff"/><path d="M17 12h-8m8 0l-3-3m3 3l-3 3" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        Logout
+      </button>
+    </div>
+  </div>
+</nav>

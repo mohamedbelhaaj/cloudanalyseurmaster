@@ -1,0 +1,263 @@
+// =========================================
+// SOC Platform - Envoyer à un Administrateur
+// =========================================
+
+@use "sass:color";
+@use "sass:math";
+
+// ========== VARIABLES ==========
+$color-primary: #dc2626;
+$color-primary-dark: #991b1b;
+$color-primary-light: #ef4444;
+$color-secondary: #0ea5e9;
+$color-success: #16a34a;
+$color-danger: #ef4444;
+
+$bg-dark-900: #0a0a0a;
+$bg-dark-800: #111827;
+$bg-dark-700: #1f2937;
+$bg-dark-600: #374151;
+$border-color: #4b5563;
+$text-primary: #f9fafb;
+$text-secondary: #9ca3af;
+
+$shadow-elevated: 0 20px 40px rgba(0,0,0,0.4);
+$transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+// ========== MAIN CARD/FORMS ==========
+.main-container {
+  max-width: 14000px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  min-height: calc(100vh - 200px);
+   background:
+    linear-gradient(120deg, rgba($bg-dark-900, 0.96), rgba($color-primary, 0.06)),
+    url("../../../../assessts/analyst.jpg") center/cover no-repeat;
+  box-shadow: 0 12px 36px rgba($color-primary, 0.07);
+
+  @media (max-width: 768px) {
+    padding: 2rem 1rem;
+    background-size: cover;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 2rem 1rem;
+  }
+}
+
+.card.form-container {
+  background: linear-gradient(135deg, $bg-dark-700 0%, $bg-dark-800 100%);
+  border: 1px solid $border-color;
+  border-radius: 20px;
+  box-shadow: $shadow-elevated;
+  overflow: hidden;
+  position: relative;
+  animation: fadeInUp 0.6s ease-out both;
+}
+
+.card-content {
+  padding: 2.5rem 2rem;
+
+  @media (max-width: 600px) {
+    padding: 1.2rem 0.7rem;
+  }
+}
+
+.header-section {
+  margin-bottom: 2rem;
+  h3.page-title {
+    font-family: Orbitron, monospace;
+    font-size: 1.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.2rem;
+    display: inline-block;
+    letter-spacing: 2px;
+    position: relative;
+    animation: glowPulse 3s ease-in-out infinite;
+  }
+
+  .report-info {
+    color: $text-secondary;
+    font-size: 1rem;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .report-title {
+    color: $color-secondary;
+    font-weight: 700;
+  }
+}
+
+.alert {
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+  border-left: 4px solid;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.04);
+  font-size: 1rem;
+  animation: slideInRight 0.4s ease-out;
+
+  &.alert-error {
+    background: rgba($color-danger, 0.18);
+    border-color: $color-danger;
+    color: color.adjust($color-danger, $lightness: 18%);
+  }
+  &.alert-success {
+    background: rgba($color-success,0.13);
+    border-color: $color-success;
+    color: color.adjust($color-success, $lightness: 20%);
+  }
+  .icon {
+    font-size: 1.4rem;
+    margin-right: 0.4em;
+  }
+}
+
+.form-group {
+  margin-bottom: 2rem;
+
+  .form-label {
+    display: block;
+    margin-bottom: 0.7rem;
+    font-weight: 600;
+    color: $text-primary;
+    font-size: 0.98rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+
+    .required {
+      color: $color-primary;
+      font-weight: 900;
+      margin-left: 2px;
+    }
+  }
+}
+
+.form-control,
+select.form-control,
+textarea.form-control {
+  width: 100%;
+  padding: 1rem 1.15rem;
+  font-size: 1rem;
+  background: $bg-dark-900;
+  color: $text-primary;
+  border: 2px solid $border-color;
+  border-radius: 12px;
+  font-family: inherit;
+  box-shadow: none;
+  transition: $transition-smooth;
+
+  &::placeholder {
+    color: $text-secondary;
+    font-style: italic;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 2px rgba($color-primary,0.10);
+    background: color.adjust($bg-dark-900, $lightness: 4%);
+  }
+}
+select.form-control {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='%23dc2626' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+.button-group {
+  display: flex;
+  gap: 1.2rem;
+  margin-top: 1.2rem;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+}
+.btn {
+  flex: 1 1 auto;
+  padding: 1.1rem 1.1rem;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+  border: none;
+  border-radius: 12px;
+  color: $text-primary;
+  font-size: 1.05rem;
+  font-family: Orbitron, monospace;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 8px 20px rgba($color-primary, 0.32);
+  cursor: pointer;
+  transition: $transition-smooth;
+  position: relative;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, $color-primary-light 0%, $color-primary 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba($color-primary, 0.41);
+  }
+  &:disabled {
+    opacity: 0.58;
+    cursor: not-allowed;
+    background: $bg-dark-700;
+  }
+  &.btn-secondary {
+    background: linear-gradient(135deg, $color-secondary 0%, $bg-dark-600 100%);
+    color: $text-primary;
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, $color-secondary 30%, $color-primary-light 100%);
+    }
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba($text-primary, 0.2);
+  border-top: 3px solid $text-primary;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 0.7rem;
+}
+
+@keyframes fadeInUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes glowPulse {
+  0%,100% { filter: drop-shadow(0 0 9px rgba($color-primary, 0.27)); }
+  50% { filter: drop-shadow(0 0 24px rgba($color-primary,0.5)); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 600px) {
+  .form-control,
+  select.form-control,
+  textarea.form-control {
+    font-size: 0.95rem;
+    padding: 0.9rem 0.7rem;
+  }
+  .btn {
+    font-size: 0.95rem;
+    padding: 0.9rem 0.7rem;
+  }
+}

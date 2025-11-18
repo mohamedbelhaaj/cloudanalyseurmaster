@@ -1,0 +1,283 @@
+@use "sass:color";
+@use "sass:math";
+
+$color-primary: #dc2626;
+$color-primary-dark: #991b1b;
+$color-secondary: #0ea5e9;
+$color-success: #16a34a;
+$color-warning: #f59e0b;
+$color-danger: #ef4444;
+$color-primary-light: #ef4444; // Ajoute cette ligne pour la variable manquante
+
+$bg-dark-900: #0a0a0a;
+$bg-dark-800: #111827;
+$bg-dark-700: #1f2937;
+$bg-dark-600: #374151;
+$border-color: #4b5563;
+$text-primary: #f9fafb;
+$text-secondary: #9ca3af;
+
+$shadow-glow: 0 0 30px rgba(220, 38, 38, 0.15);
+$shadow-elevated: 0 20px 40px rgba(0, 0, 0, 0.4);
+$transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+.main-container {
+  max-width: 9000px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+  background: linear-gradient(120deg, rgba($bg-dark-900,0.93), rgba($color-primary, 0.06));
+  border-radius: 28px;
+  box-shadow: $shadow-glow;
+  animation: fadeInUp 0.5s;
+  background:
+    linear-gradient(120deg, rgba($bg-dark-900, 0.96), rgba($color-primary, 0.06)),
+    url("../../../../assessts/analyst.jpg") center/cover no-repeat;
+  box-shadow: 0 12px 36px rgba($color-primary, 0.07);
+
+  @media (max-width: 768px) {
+    padding: 2rem 1rem;
+    background-size: cover;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 2rem 1rem;
+  }
+}
+
+.card {
+  background: linear-gradient(135deg, $bg-dark-700 0%, $bg-dark-800 100%);
+  border: 1px solid $border-color;
+  border-radius: 22px;
+  box-shadow: $shadow-elevated;
+  overflow: hidden;
+  position: relative;
+  transition: $transition-smooth;
+
+  &::before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, $color-primary, transparent);
+    opacity: 0.8;
+  }
+
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: $shadow-elevated, $shadow-glow;
+    border-color: rgba($color-primary, 0.3);
+  }
+
+  .card-content {
+    padding: 2.5rem 2rem;
+
+    h3 {
+      font-family: 'Orbitron', monospace;
+      font-size: 1.38rem;
+      color: $text-primary;
+      margin-bottom: 2rem;
+      position: relative;
+      display: inline-block;
+      font-weight: 900;
+      letter-spacing: 2px;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -7px;
+        left: 0;
+        width: 50px;
+        height: 3px;
+        background: linear-gradient(90deg, $color-primary 0%, transparent 100%);
+      }
+    }
+    p {
+      color: $text-secondary;
+      margin-bottom: 1.6rem;
+
+      strong {
+        color: $color-primary;
+        font-weight: 700;
+      }
+    }
+  }
+}
+
+.form-group {
+  margin-bottom: 1.7rem;
+
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  color: $text-primary;
+  font-size: 0.98rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+
+  &::before {
+    content: '▸ ';
+    color: $color-primary;
+    font-weight: 900;
+  }
+}
+
+.form-control {
+  width: 100%;
+  padding: 1rem 1.2rem;
+  font-size: 1rem;
+  background: $bg-dark-900;
+  border: 2px solid $border-color;
+  border-radius: 12px;
+  color: $text-primary;
+  transition: $transition-smooth;
+  font-family: inherit;
+  resize: vertical;
+
+  &::placeholder {
+    color: $text-secondary;
+    font-style: italic;
+    opacity: 0.77;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba($color-primary,0.09), 0 0 20px rgba($color-primary, 0.13);
+    background: color.adjust($bg-dark-900, $lightness: 6%);
+    transform: translateY(-1px);
+  }
+}
+
+select.form-control {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23dc2626' d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 3rem;
+
+  option {
+    background: $bg-dark-800;
+    color: $text-primary;
+    padding: 0.5rem;
+  }
+}
+
+.form-check-input[type="checkbox"] {
+  accent-color: $color-primary;
+  width: 21px;
+  height: 21px;
+  margin-right: 5px;
+  border-radius: 7px;
+  transition: $transition-smooth;
+
+  &:focus {
+    box-shadow: 0 0 0 2px rgba($color-primary, 0.32);
+    outline: none;
+  }
+}
+
+.form-check-label {
+  color: $text-secondary;
+  font-size: 1.04rem;
+  font-weight: 600;
+  transition: $transition-smooth;
+}
+
+.btn {
+  width: 100%;
+  padding: 1.2rem 2rem;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+  border: none;
+  border-radius: 13px;
+  color: $text-primary;
+  font-size: 1.08rem;
+  font-weight: 700;
+  font-family: 'Orbitron', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1.7px;
+  cursor: pointer;
+  transition: $transition-smooth;
+  position: relative;
+  box-shadow: 0 8px 24px rgba($color-primary, 0.33);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-3px);
+    background: linear-gradient(135deg, $color-primary-light 0%, $color-primary-dark 100%);
+    box-shadow: 0 12px 32px rgba($color-primary, 0.38), 0 0 50px rgba($color-primary, 0.11);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+.alert {
+  padding: 1rem 1.3rem;
+  border-radius: 12px;
+  margin-top: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  animation: slideInRight 0.38s;
+  backdrop-filter: blur(6px);
+  border-left: 4px solid;
+
+  &-danger {
+    background: rgba($color-danger, 0.15);
+    border-color: $color-danger;
+    color: color.adjust($color-danger, $lightness: 20%);
+  }
+}
+
+.result-card {
+  background: linear-gradient(120deg, rgba($color-success, 0.09) 0%, $bg-dark-700 100%);
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba($color-success,0.07);
+  padding: 1rem 1.6rem;
+  animation: scaleIn 0.5s ease-out;
+
+  h4 {
+    color: $color-success;
+    font-size: 1.03rem;
+    margin: 0.7rem 0;
+    font-weight: 700;
+  }
+  p {
+    font-size: 1.01rem;
+    color: $text-secondary;
+    margin: 0.3rem 0;
+    strong {
+      color: $text-primary;
+    }
+  }
+}
+
+// === Animation ===
+@keyframes fadeInUp {
+  from { transform: translateY(46px); opacity: 0;}
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1;}
+}
+@keyframes scaleIn {
+  from { transform: scale(0.88); opacity: 0; }
+  to   { transform: scale(1); opacity: 1;}
+}

@@ -1,0 +1,344 @@
+// ============================================
+// Create Task Component – Modern Dark Theme
+// ============================================
+
+@use "sass:color";
+@use "sass:math";
+
+// ---------- VARIABLES ----------
+$color-primary: #dc2626;
+$color-primary-dark: #991b1b;
+$color-primary-light: #ef4444;
+$color-secondary: #0ea5e9;
+
+$bg-dark-900: #0a0a0a;
+$bg-dark-800: #111827;
+$bg-dark-700: #1f2937;
+$bg-dark-600: #374151;
+
+$border-color: #4b5563;
+$text-primary: #f9fafb;
+$text-secondary: #9ca3af;
+
+$shadow-glow: 0 0 30px rgba($color-primary, 0.15);
+$shadow-elevated: 0 20px 40px rgba(0, 0, 0, 0.4);
+$transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+// ---------- MIXINS ----------
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin card-hover {
+  transition: $transition-smooth;
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: $shadow-elevated, $shadow-glow;
+    border-color: rgba($color-primary, 0.6);
+  }
+}
+
+// ---------- BASE ----------
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, $bg-dark-900 0%, $bg-dark-800 100%);
+  color: $text-primary;
+  min-height: 100vh;
+}
+
+// ---------- MAIN CONTAINER ----------
+.main-container {
+ max-width: 14000px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  min-height: calc(100vh - 200px);
+   background:
+    linear-gradient(120deg, rgba($bg-dark-900, 0.96), rgba($color-primary, 0.06)),
+    url("../../../../assessts/analyst.jpg") center/cover no-repeat;
+  box-shadow: 0 12px 36px rgba($color-primary, 0.07);
+
+  @media (max-width: 768px) {
+    padding: 2rem 1rem;
+    background-size: cover;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 2rem 1rem;
+  }
+}
+// ---------- CARD ----------
+.card {
+  background: linear-gradient(135deg, $bg-dark-700 0%, $bg-dark-800 100%);
+  border: 1px solid $border-color;
+  border-radius: 20px;
+  box-shadow: $shadow-elevated;
+  overflow: hidden;
+  position: relative;
+  @include card-hover;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, $color-primary, transparent);
+    opacity: 0.8;
+  }
+}
+
+.card-content {
+  padding: 2.5rem;
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+  }
+}
+
+// ---------- HEADER ----------
+.header-section {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  .page-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .report-info {
+    color: $text-secondary;
+    font-size: 1rem;
+  }
+}
+
+// ---------- ALERTS ----------
+.error-alert {
+  background: rgba($color-primary-light, 0.1);
+  border-left: 4px solid $color-primary;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: $color-primary-light;
+  font-weight: 500;
+  animation: slideIn 0.4s ease-out;
+}
+
+.warning-box {
+  background: rgba(#f59e0b, 0.1);
+  border-left: 4px solid #f59e0b;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #f59e0b;
+  font-size: 0.9rem;
+}
+
+// ---------- FORM ----------
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: $text-primary;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  .required {
+    color: $color-primary;
+    margin-left: 4px;
+  }
+}
+
+.form-control {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  background: $bg-dark-900;
+  border: 2px solid $border-color;
+  border-radius: 12px;
+  color: $text-primary;
+  transition: $transition-smooth;
+  font-family: inherit;
+
+  &::placeholder {
+    color: $text-secondary;
+    font-style: italic;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 4px rgba($color-primary, 0.1), 0 0 20px rgba($color-primary, 0.3);
+    background: color.adjust($bg-dark-900, $lightness: 3%);
+  }
+
+  &.invalid {
+    border-color: $color-primary-light;
+  }
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 120px;
+}
+
+select.form-control {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23dc2626'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1rem;
+  padding-right: 3rem;
+  cursor: pointer;
+}
+
+.error-message {
+  color: $color-primary-light;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+// ---------- BUTTONS ----------
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+
+.btn {
+  flex: 1;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: 'Orbitron', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: $transition-smooth;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  &:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+  color: $text-primary;
+  box-shadow: 0 8px 24px rgba($color-primary, 0.4);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba($color-primary, 0.5), $shadow-glow;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-secondary {
+  background: transparent;
+  color: $text-secondary;
+  border: 2px solid $border-color;
+
+  &:hover:not(:disabled) {
+    border-color: $color-primary;
+    color: $color-primary;
+    transform: translateY(-4px);
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: $text-primary;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ---------- RESPONSIVE ----------
+@media (max-width: 768px) {
+  .main-container {
+    padding: 15px;
+  }
+
+  .card-content {
+    padding: 1.5rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .form-control {
+    font-size: 1rem;
+  }
+
+  .btn {
+    font-size: 1rem;
+  }
+}

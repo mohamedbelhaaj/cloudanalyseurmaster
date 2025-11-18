@@ -1,0 +1,81 @@
+
+
+      <!-- SIGNUP -->
+      <form *ngIf="!isLoginMode" [formGroup]="signupForm" (ngSubmit)="onSignUp()">
+        <!-- Nom -->
+        <div class="form-group">
+          <label for="signup-nom">Nom</label>
+          <input type="text" id="signup-nom" formControlName="nom" placeholder="Votre nom">
+          <div *ngIf="signupForm.get('nom')?.invalid && signupForm.get('nom')?.touched" class="error-message">
+            Veuillez entrer votre nom
+          </div>
+        </div>
+
+        <!-- Prénom -->
+        <div class="form-group">
+          <label for="signup-prenom">Prénom</label>
+          <input type="text" id="signup-prenom" formControlName="prenom" placeholder="Votre prénom">
+          <div *ngIf="signupForm.get('prenom')?.invalid && signupForm.get('prenom')?.touched" class="error-message">
+            Veuillez entrer votre prénom
+          </div>
+        </div>
+        <!-- Email -->
+        <div class="form-group">
+          <label for="signup-email">Email</label>
+          <input type="email" id="signup-email" formControlName="email" placeholder="Votre email">
+          <div *ngIf="signupForm.get('email')?.invalid && signupForm.get('email')?.touched" class="error-message">
+            Veuillez entrer un email valide
+          </div>
+        </div>
+        <!-- Mot de passe -->
+        <div class="form-group">
+          <label for="signup-password">Mot de passe</label>
+          <input type="password" id="signup-password" formControlName="password" placeholder="Votre mot de passe">
+          <div *ngIf="signupForm.get('password')?.invalid && signupForm.get('password')?.touched" class="error-message">
+            Le mot de passe doit faire au moins 6 caractères
+          </div>
+        </div>
+
+        <!-- Genre -->
+        <div class="form-group">
+          <label>Genre</label>
+          <div class="radio-group">
+            <label><input type="radio" value="H" formControlName="genre"> Homme</label>
+            <label><input type="radio" value="F" formControlName="genre"> Femme</label>
+          </div>
+          <div *ngIf="signupForm.get('genre')?.invalid && signupForm.get('genre')?.touched" class="error-message">
+            Veuillez choisir un genre
+          </div>
+        </div>
+
+        
+
+
+        
+
+        <!-- Rôle -->
+        <div class="form-group">
+          <label for="signup-role">Rôle</label>
+          <select id="signup-role" formControlName="role">
+            <option value="" disabled selected>Choisir un rôle</option>
+            <option value="SOC">SOC</option>
+            <option value="admin">Admin</option>
+          </select>
+          <div *ngIf="signupForm.get('role')?.invalid && signupForm.get('role')?.touched" class="error-message">
+            Veuillez choisir un rôle
+          </div>
+        </div>
+
+        <button type="submit" [disabled]="loading || signupForm.invalid" class="auth-button">
+          <span *ngIf="!loading">S'inscrire</span>
+          <span *ngIf="loading">Inscription en cours...</span>
+        </button>
+
+        <div class="auth-footer">
+          <button type="button" (click)="switchMode()" class="text-button">Déjà un compte ? Se connecter</button>
+        </div>
+      </form>
+
+      <!-- Messages -->
+  
+    

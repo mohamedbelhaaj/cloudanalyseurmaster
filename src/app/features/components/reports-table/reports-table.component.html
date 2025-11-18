@@ -1,0 +1,103 @@
+<div class="table-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-overlay">
+    <div class="spinner-large"></div>
+    <p>Chargement des rapports...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && reports.length === 0" class="empty-state">
+    <div class="empty-icon">📋</div>
+    <h3>Aucun rapport disponible</h3>
+    <p>Il n'y a actuellement aucun rapport à afficher.</p>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!loading && reports.length > 0" class="table-wrapper">
+    <table class="reports-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Valeur d'entrée</th>
+          <th>Type</th>
+          <th>Sévérité</th>
+          <th>Statut</th>
+          <th>Analyste</th>
+          <th>Assigné à</th>
+          <th>Date de création</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of reports; trackBy: trackByReportId" class="table-row">
+          <td class="text-center">
+            <span class="id-badge">#{{ r.id }}</span>
+          </td>
+          <td class="input-value" [title]="r.input_value">
+            {{ r.input_value | slice:0:50 }}{{ r.input_value.length > 50 ? '...' : '' }}
+          </td>
+          <td>
+            <span class="type-badge">{{ getInputTypeLabel(r.input_type) }}</span>
+          </td>
+          <td>
+            <span class="severity-badge" [ngClass]="severityBadge(r.severity)">
+              {{ getSeverityLabel(r.severity) }}
+            </span>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="statusBadge(r.status)">
+              {{ getStatusLabel(r.status) }}
+            </span>
+          </td>
+          <td>
+            <div class="user-info">
+              <span class="user-icon">👤</span>
+              <span>{{ r.analyst.username }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="user-info">
+              <span class="user-icon">🎯</span>
+              <span>{{ r.assigned_to.username }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="date-text">{{ formatDate(r.created_at) }}</span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button 
+                class="btn-action btn-view" 
+                (click)="viewReport(r.id)"
+                title="Voir les détails"
+              >
+                <span class="icon">👁</span>
+              </button>
+              <button 
+                class="btn-action btn-task" 
+                (click)="createTask(r)"
+                title="Créer une tâche"
+              >
+                <span class="icon">➕</span>
+              </button>
+              <button 
+                class="btn-action btn-edit" 
+                (click)="editReport(r.id)"
+                title="Modifier"
+              >
+                <span class="icon">✏️</span>
+              </button>
+              <button 
+                class="btn-action btn-delete" 
+                (click)="deleteReport(r.id)"
+                title="Supprimer"
+              >
+                <span class="icon">🗑</span>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

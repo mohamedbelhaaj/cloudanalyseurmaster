@@ -1,0 +1,83 @@
+<div class="main-container">
+  <div class="header">
+    <h1>🔴 Hybride Analysis</h1>
+    <p class="subtitle">Analyse de sécurité avec VirusTotal et AlienVault OTX</p>
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="success" class="alert alert-success">{{ success }}</div>
+
+  <!-- Formulaire -->
+  <div class="card form-container">
+    <div class="card-content">
+      <form (ngSubmit)="analyze()">
+        <div class="form-group">
+          <label class="form-label">URL, IP, Domaine ou Hash :</label>
+          <input type="text" class="form-control" [(ngModel)]="inputValue" name="inputValue"
+                 placeholder="https://example.com | 8.8.8.8 | eicar | 275a021b...">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Ou téléverser un fichier :</label>
+          <input type="file" class="form-control" (change)="onFileSelect($event)" accept="*">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Moteur d'analyse :</label>
+          <select class="form-control" [(ngModel)]="engineChoice" name="engineChoice">
+            <option value="vt">VirusTotal</option>
+            <option value="otx">AlienVault OTX</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn" [disabled]="loading">
+          {{ loading ? 'Analyse en cours...' : 'Lancer l\'analyse' }}
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Résultat -->
+  <div *ngIf="result" class="card result-section">
+    <div class="card-content">
+      <h3>Rapport généré</h3>
+      <p>Indicateur : <strong>{{ result.input_value }}</strong></p>
+      <p>Type : <strong>{{ result.input_type }}</strong></p>
+      <p>Score : <strong>{{ result.threat_score }}/100</strong></p>
+      <p>Sévérité : <span class="badge" [ngClass]="badgeSeverity(result.severity)">{{ result.severity }}</span></p>
+      <a class="action-link" [routerLink]="['/reports', result.id]">Voir le détail du rapport →</a>
+    </div>
+  </div>
+
+  <!-- Rapports récents -->
+  <div *ngIf="recentReports.length" class="card">
+    <div class="card-content">
+      <h3>Vos rapports récents</h3>
+      <div class="table-wrapper">
+        <table class="detection-table">
+          <thead>
+            <tr>
+              <th>Indicateur</th>
+              <th>Sévérité</th>
+              <th>Score</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let report of recentReports">
+              <td>{{ report.input_value | slice:0:50 }}</td>
+              <td>
+                <span class="badge" [ngClass]="badgeSeverity(report.severity)">{{ report.severity }}</span>
+              </td>
+              <td>{{ report.threat_score }}/100</td>
+              <td>
+                <a class="action-link" [routerLink]="['/reports', report.id]">Voir le rapport</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
