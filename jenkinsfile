@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://ton-repo-git.git', branch: 'main'
+                git url: 'https://github.com/mohamedbelhaaj/pipline.git', branch: 'main'
             }
         }
 
