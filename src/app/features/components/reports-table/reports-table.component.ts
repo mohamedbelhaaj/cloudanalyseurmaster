@@ -3,33 +3,37 @@ import { Report } from '../../../core/models/reports.model';
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReportsService } from '../../../core/services/reports.service';
+
 @Component({
   selector: 'app-reports-table',
   imports: [CommonModule, RouterModule],
   templateUrl: './reports-table.component.html',
-  styleUrls: ['./reports-table.component.css'] // Changé de .scss à .css
+  styleUrls: ['./reports-table.component.css']
 })
-export class ReportsTableComponent  implements OnInit {
+export class ReportsTableComponent implements OnInit {
   @Input() reports: Report[] = [];
   @Input() loading: boolean = false;
-  @Output() onView = new EventEmitter<number>();
-  @Output() onEdit = new EventEmitter<number>();
-  @Output() onDelete = new EventEmitter<number>();
+  @Output() onView = new EventEmitter<string>();
+  @Output() onEdit = new EventEmitter<string>();
+  @Output() onDelete = new EventEmitter<string>();
   @Output() onCreateTask = new EventEmitter<Report>();
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private reportsService: ReportsService
+  ) {}
 
   ngOnInit(): void {}
 
-  viewReport(reportId: number): void {
+  viewReport(reportId: string): void {
     this.onView.emit(reportId);
   }
 
-  editReport(reportId: number): void {
+  editReport(reportId: string): void {
     this.onEdit.emit(reportId);
   }
 
-  deleteReport(reportId: number): void {
+  deleteReport(reportId: string): void {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce rapport ?')) {
       this.onDelete.emit(reportId);
     }
@@ -43,31 +47,35 @@ export class ReportsTableComponent  implements OnInit {
       }
     });
   }
-  trackByReportId(index: number, report: Report): number {
-  return report.id;
-}
+
+  trackByReportId(index: number, report: Report): string {
+    return report.id;
+  }
 
   severityBadge(severity: string): string {
     const severityMap: { [key: string]: string } = {
       'low': 'badge-low',
       'medium': 'badge-medium',
       'high': 'badge-high',
-      'critical': 'badge-critical'
+      'critical': 'badge-critical',
+      'informational': 'badge-informational'
     };
-    return severityMap[severity] || 'badge-default';
+    return severityMap[severity.toLowerCase()] || 'badge-default';
   }
 
   statusBadge(status: string): string {
     const statusMap: { [key: string]: string } = {
       'pending': 'status-pending',
+      'pending_review': 'status-pending',
       'in_progress': 'status-progress',
       'completed': 'status-completed',
       'archived': 'status-archived'
     };
-    return statusMap[status] || 'status-default';
+    return statusMap[status.toLowerCase()] || 'status-default';
   }
 
   formatDate(dateString: string): string {
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
       year: 'numeric',
@@ -88,7 +96,7 @@ export class ReportsTableComponent  implements OnInit {
       'file': 'Fichier',
       'text': 'Texte'
     };
-    return typeMap[type] || type;
+    return typeMap[type.toLowerCase()] || type;
   }
 
   getSeverityLabel(severity: string): string {
@@ -96,18 +104,20 @@ export class ReportsTableComponent  implements OnInit {
       'low': 'Faible',
       'medium': 'Moyen',
       'high': 'Élevé',
-      'critical': 'Critique'
+      'critical': 'Critique',
+      'informational': 'Informatif'
     };
-    return severityMap[severity] || severity;
+    return severityMap[severity.toLowerCase()] || severity;
   }
 
   getStatusLabel(status: string): string {
     const statusMap: { [key: string]: string } = {
       'pending': 'En attente',
+      'pending_review': 'En attente de révision',
       'in_progress': 'En cours',
       'completed': 'Terminé',
       'archived': 'Archivé'
     };
-    return statusMap[status] || status;
+    return statusMap[status.toLowerCase()] || status;
   }
 }

@@ -1,0 +1,66 @@
+<div *ngIf="loading">Chargement des tâches...</div>
+<div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+<table class="table table-striped" *ngIf="!loading && tasks.length">
+  <thead>
+    <tr>
+      <th>Titre</th>
+      <th>Priorité</th>
+      <th>Statut</th>
+      <th>Échéance</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let task of tasks" (click)="viewTask(task)" style="cursor: pointer;">
+      <td>{{ task.title }}</td>
+      <td>{{ task.priority }}</td>
+      <td>{{ task.status }}</td>
+      <td>{{ task.due_date | date:'medium' }}</td>
+      <td>
+        <button type="button" (click)="viewTask(task); $event.stopPropagation()" class="btn btn-sm btn-primary">
+          Voir
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div *ngIf="!loading && !tasks.length && !error" class="text-muted">
+  Aucune tâche trouvée.
+</div>
+
+<ng-container *ngIf="selectedTask">
+  <div class="modal-backdrop"></div>
+  <div class="modal show" tabindex="-1" style="display:block">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ selectedTask.title }}</h5>
+          <button type="button" class="btn-close" aria-label="Close" (click)="closeTaskDetails()"></button>
+        </div>
+        <div class="modal-body">
+          <p><b>Description :</b> {{ selectedTask.description }}</p>
+          <p><b>Priorité :</b> {{ selectedTask.priority }}</p>
+          <p><b>Statut :</b> {{ selectedTask.status }}</p>
+          <p><b>Échéance :</b> {{ selectedTask.due_date | date:'medium' }}</p>
+          <hr />
+          <p>
+            <b>Créée par :</b>
+            <ng-container *ngIf="selectedTask.created_by && typeof selectedTask.created_by === 'object'; else notAvailableCreatedBy">
+              {{ selectedTask.created_by.username }}
+            </ng-container>
+            <ng-template #notAvailableCreatedBy>(données indisponibles)</ng-template>
+          </p>
+          <p>
+            <b>Assignée à :</b>
+            <ng-container *ngIf="selectedTask.assigned_to && typeof selectedTask.assigned_to === 'object'; else notAssigned">
+              {{ selectedTask.assigned_to.username }}
+            </ng-container>
+            <ng-template #notAssigned>(non assignée)</ng-template>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>

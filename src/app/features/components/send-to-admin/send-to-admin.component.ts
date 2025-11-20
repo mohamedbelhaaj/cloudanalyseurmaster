@@ -15,7 +15,7 @@ import { User } from '../../../core/models/user.model';
   styleUrls: ['./send-to-admin.component.scss']
 })
 export class SendToAdminComponent implements OnInit {
-  reportId!: number;
+  reportId!: string;
   reportTitle: string = '';
   adminUsers: User[] = [];
   selectedAdminId: string = '';
@@ -38,7 +38,7 @@ export class SendToAdminComponent implements OnInit {
 
   getRouteParams(): void {
     this.route.queryParams.subscribe(params => {
-      this.reportId = Number(params['reportId']);
+      this.reportId = String(params['reportId']);
       this.reportTitle = params['reportTitle'] || 'Rapport sans titre';
     });
   }
@@ -72,7 +72,7 @@ export class SendToAdminComponent implements OnInit {
     this.reportsService.sendToAdmin(
       this.reportId, 
       Number(this.selectedAdminId),
-      this.message || undefined
+      this.message || ''
     ).subscribe({
       next: (res: SendToAdminResponse) => {
         this.successMessage = 'Rapport envoyé avec succès à l\'administrateur';

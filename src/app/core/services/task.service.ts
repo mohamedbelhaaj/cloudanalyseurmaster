@@ -3,7 +3,7 @@ import { Observable, throwError } from 'rxjs';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
  import { User } from '../models/user.model';
 import { catchError, map } from 'rxjs/operators';
-import { Task, TaskCreateRequest, TaskResponse } from '../models/task.model';
+import { Task, TaskCreateRequest } from '../models/task.model';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +13,7 @@ export class TaskService {
 
   constructor(private http: HttpClient) {}
 
-  getTasks(params?: any): Observable<TaskResponse[]> {
+  getTasks(params?: any): Observable<Response[]> {
     let httpParams = new HttpParams();
     
     if (params) {
@@ -24,35 +24,35 @@ export class TaskService {
       });
     }
 
-    return this.http.get<TaskResponse[]>(this.apiUrl, { params: httpParams })
+    return this.http.get<Response[]>(this.apiUrl, { params: httpParams })
       .pipe(
         catchError(this.handleError)
       );
   }
 
-  getTaskById(id: number): Observable<TaskResponse> {
-    return this.http.get<TaskResponse>(`${this.apiUrl}/${id}/`)
+  getTaskById(id: number): Observable<Response> {
+    return this.http.get<Response>(`${this.apiUrl}/${id}/`)
       .pipe(
         catchError(this.handleError)
       );
   }
 
-  createTask(task: TaskCreateRequest): Observable<TaskResponse> {
-    return this.http.post<TaskResponse>(`${this.apiUrl}/`, task)
+  createTask(task: TaskCreateRequest): Observable<Response> {
+    return this.http.post<Response>(`${this.apiUrl}/`, task)
       .pipe(
         catchError(this.handleError)
       );
   }
 
-  updateTask(id: number, task: Partial<Task>): Observable<TaskResponse> {
-    return this.http.put<TaskResponse>(`${this.apiUrl}/${id}/`, task)
+  updateTask(id: number, task: Partial<Task>): Observable<Response> {
+    return this.http.put<Response>(`${this.apiUrl}/${id}/`, task)
       .pipe(
         catchError(this.handleError)
       );
   }
 
-  patchTask(id: number, task: Partial<Task>): Observable<TaskResponse> {
-    return this.http.patch<TaskResponse>(`${this.apiUrl}/${id}/`, task)
+  patchTask(id: number, task: Partial<Task>): Observable<Response> {
+    return this.http.patch<Response>(`${this.apiUrl}/${id}/`, task)
       .pipe(
         catchError(this.handleError)
       );

@@ -1,51 +1,42 @@
-<div class="container">
-  <nav class="sidebar">
-    <div class="sidebar-header">
-      <span class="brand-logo">Sahara</span>
+<div class="dashboard-container">
+  
+
+  <div class="stat-widgets-row">
+    <div *ngFor="let stat of stats" class="stat-widget" [ngClass]="stat.border">
+      <span class="icon">{{ stat.icon }}</span>
+      <div class="stat-label">{{ stat.label }}</div>
     </div>
-    <ul class="sidebar-menu">
-      <li class="menu-item active"><span class="icon">🏠</span> Dashboard</li>
-      <li class="menu-item"><span class="icon">👤</span> Profile</li>
-      <li class="menu-item"><span class="icon">💡</span> Skills</li>
-      <li class="menu-item"><span class="icon">⭐</span> Ratings</li>
-      <li class="menu-item"><span class="icon">📥</span> Requests <span class="badge">24</span></li>
-      <li class="menu-item"><span class="icon">🏆</span> Leaderboard</li>
-    </ul>
-    <button class="logout-btn">Logout</button>
-    <div class="sidebar-footer">Employee</div>
-  </nav>
+  </div>
 
-  <div class="main-content">
-    <header class="dashboard-header">
-      <h2>Welcome back, Jason</h2>
-      <div class="profile-pic"><img src="user.jpg" alt="User"></div>
-      <span class="notification-icon">🔔</span>
-      <input type="search" class="search-bar" placeholder="Search...">
-    </header>
-
-    <section class="dashboard-cards">
-      <div class="card main-points">
-        <div class="points">
-          <span class="avatar-img"><img src="skills.jpg" alt="Avatar"></span>
-          <span class="big-number">86</span>
-          <span class="small-label">Your skills level points</span>
-        </div>
-        <div class="rating">
-          <span class="rating-score">4.5</span>
-          <span class="stars">★★★★☆</span>
-        </div>
+  <div class="row">
+    <div class="threat-section">
+      <div class="section-title">Recent Threat Reports</div>
+      <table class="threat-report-table">
+        <thead>
+          <tr>
+            <th>TYPE</th>
+            <th>INDICATOR</th>
+            <th>SEVERITY</th>
+            <th>ANALYST</th>
+            <th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let threat of recentThreats">
+            <td>{{ threat.type }}</td>
+            <td>{{ threat.indicator }}</td>
+            <td><span class="severity-info">{{ threat.severity }}</span></td>
+            <td>{{ threat.analyst }}</td>
+            <td><a href="#" class="view-details">{{ threat.actionText }}</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="notification-section">
+      <div class="section-title">
+        Notifications <span class="mark-read">Mark All Read</span>
       </div>
-      <!-- Ajoute plus de cartes, graphiques, stats ici -->
-    </section>
-
-    <section class="skills-row">
-      <!-- Skills, progress bar, etc. -->
-    </section>
-
-    <section class="requests-sidebar">
-      <div class="card requests-list">
-        <!-- Cards list des requêtes avec accept/refuse (ou check/cross) -->
-      </div>
-    </section>
+      <div class="notification-list">No new notifications.</div>
+    </div>
   </div>
 </div>

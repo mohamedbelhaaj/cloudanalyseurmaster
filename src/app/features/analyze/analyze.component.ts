@@ -1,10 +1,10 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule , Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AnalysisResult } from '../../core/models/analysis.model';
 import { AnalyzeService } from '../../core/services/analyze.service';
-
+import { ReportsService } from '@core/services/reports.service';
 @Component({
   selector: 'app-analyze',
   standalone: true,
@@ -26,14 +26,12 @@ export class AnalyzeComponent implements OnInit { // ✅ correction 2
   success = '';
 
   // Getters pour éviter localStorage dans le template
-  get username(): string {
-    return localStorage.getItem('username') ?? 'User';
-  }
-  get role(): string {
-    return localStorage.getItem('role') ?? 'analyst';
-  }
+ 
 
-  constructor(private analyzeService: AnalyzeService) {}
+  constructor(private analyzeService: AnalyzeService,
+    private  ReportsService:ReportsService,
+    private Router : Router
+  ) {}
 
   ngOnInit(): void {
     // On pourra ré-activer listRecent() quand la route Django existera

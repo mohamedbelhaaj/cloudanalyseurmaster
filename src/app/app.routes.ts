@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { authInterceptor } from './core/guards/auth.guard';
 import { LoginComponent } from './features/auth/login/login.component';
 
 export const routes: Routes = [
@@ -10,15 +9,18 @@ export const routes: Routes = [
     path: 'login',
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
   },
- 
+ {path:'dashboard',
+  loadComponent:()=>import('./features/dashboard/dashboard.component').then(m=>m.DashboardComponent)
+ },
    {
     path: 'reports',
     loadComponent: () => import('./features/components/reports-table/reports-table.component').then(m => m.ReportsTableComponent),
   },
   {
-    path: 'reports',
+    path: 'reports/:id',
     loadComponent:()=>import('./features/components/report-detail/report-detail.component').then(m=>m.ReportDetailComponent),
   },
+  {path:'sendtoadmin' , loadComponent:()=>import('./features/components/send-to-admin/send-to-admin.component').then(m=>m.SendToAdminComponent)},
   
   {
   path: 'task',
@@ -28,9 +30,7 @@ export const routes: Routes = [
   path: 'tasks',
   loadComponent: () => import('./features/components/create-task/create-task.component').then(m => m.CreateTaskComponent)
 },
-{path:'sendtoadmin' ,
-  loadComponent: ()=> import('./features/components/send-to-admin/send-to-admin.component').then(m=>m.SendToAdminComponent)
-},
+
 {
 path:'mitigations', 
 loadComponent: ()=> import('./features/components/migrations-table/migrations-table.component').then(m => m.MigrationsTableComponent)

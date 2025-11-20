@@ -1,38 +1,33 @@
-import { User } from "./user.model";
-
-export interface Task {
-  id?: number;
-  title: string;
-  description: string;
-  priority: 'low' | 'medium' | 'high';
-  assigned_to: number;
-  due_date: string;
-  report: number;
-  status?: 'pending' | 'in_progress' | 'completed';
-  created_by?: number;
-  created_at?: string;
-  updated_at?: string;
-}
-
 export interface TaskCreateRequest {
   title: string;
   description: string;
   priority: string;
-  assigned_to: number;
+  assigned_to_id: number;
+  report_id: string;  // Changed from number to string
   due_date: string;
-  report: number;
 }
 
-export interface TaskResponse {
+export interface Task {
   id: number;
   title: string;
   description: string;
   priority: string;
-  assigned_to: User;
-  due_date: string;
-  report: Report;
   status: string;
-  created_by: User;
+  report: {
+    id: string;  // Changed from number to string
+    input_value: string;
+  };
+  assigned_to: {
+    id: number;
+    username: string;
+    email: string;
+  };
+  created_by: {
+    id: number;
+    username: string;
+  };
+  due_date: string;
   created_at: string;
   updated_at: string;
+  completed_at?: string;
 }

@@ -1,13 +1,13 @@
 export interface SendToAdminRequest {
-  assigned_to: number;
+  assigned_to_id: string;
   message?: string;
 }
 
 export interface SendToAdminResponse {
-  id: number;
+  id: string;
   message: string;
-  assigned_to: number;
-  previous_assigned_to?: number;
+  assigned_to_id: string;
+  previous_assigned_to?: string;
   updated_at: string;
   status?: string;
 }

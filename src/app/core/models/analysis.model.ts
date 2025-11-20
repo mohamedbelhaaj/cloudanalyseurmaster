@@ -5,7 +5,7 @@ export interface AnalysisInput {
 }
 
 export interface AnalysisResult {
-  id: number;
+  id: string;
   analyst: object;
   input_type: 'ip' | 'domain' | 'url' | 'hash' | 'file';
   input_value: string;

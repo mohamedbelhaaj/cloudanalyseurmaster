@@ -1,17 +1,19 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import {  MitigationActionResponse } from '@core/models/mitigations.model';
+import { MitigationActionResponse } from '@core/models/mitigations.model';
 import { MigrationsService } from '@core/services/migrations.service';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+
 @Component({
   selector: 'app-migrations-table',
-standalone: true,
-  imports: [CommonModule, RouterModule,ReactiveFormsModule],  templateUrl: './migrations-table.component.html',
-  styleUrls: ['./migrations-table.component.scss']
+  standalone: true,
+  imports: [CommonModule, RouterModule, ReactiveFormsModule],
+  templateUrl: './migrations-table.component.html',
+  styleUrl: './migrations-table.component.scss'
 })
 export class MigrationsTableComponent implements OnInit {
- @Input() reportId: string = ''; // Remplis depuis le parent si contexte rapport
+  @Input() reportId: string = '';
   mitigationForm: FormGroup;
   mitigationResult: MitigationActionResponse | null = null;
   loading: boolean = false;
@@ -39,11 +41,14 @@ export class MigrationsTableComponent implements OnInit {
       execute_now: [false]
     });
   }
+
   ngOnInit(): void {
-    throw new Error('Method not implemented.');
+    // Si tu veux charger quelque chose ici, par exemple :
+    // this.loadMitigationHistory(this.reportId);
+    // Sinon, laisse vide si rien à charger au démarrage
   }
 
-  submit() {
+  submit(): void {
     this.loading = true;
     this.error = null;
     const payload = { ...this.mitigationForm.value, report: this.reportId };

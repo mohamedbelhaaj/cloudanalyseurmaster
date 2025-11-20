@@ -4,13 +4,12 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { ActivatedRoute, Router } from '@angular/router';
 import { ReportsService } from '../../../core/services/reports.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { ReportDetail, UpdateStatusRequest, VTData, OTXData, IPInfoData } from '../../../core/models/reports.model'
+import { ReportDetail, UpdateStatusRequest, VTData, OTXData, IPInfoData } from '../../../core/models/reports.model';
 import { User } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-report-detail',
-    standalone: true,
-
+  standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './report-detail.component.html',
   styleUrls: ['./report-detail.component.css']
@@ -22,16 +21,13 @@ export class ReportDetailComponent implements OnInit {
   errorMessage: string = '';
   successMessage: string = '';
   
-  // Formulaire pour mettre à jour le statut (Admin)
   statusForm!: FormGroup;
   isUpdatingStatus: boolean = false;
 
-  // Données typées
   vtData: VTData | null = null;
   otxData: OTXData | null = null;
   ipinfoData: IPInfoData | null = null;
 
-  // États
   isAdmin: boolean = false;
   isAnalyst: boolean = false;
 
@@ -69,7 +65,7 @@ export class ReportDetailComponent implements OnInit {
   }
 
   loadReport(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+    const id = this.route.snapshot.paramMap.get('id');
     
     if (!id) {
       this.errorMessage = 'ID de rapport invalide';
@@ -82,11 +78,20 @@ export class ReportDetailComponent implements OnInit {
         this.report = report;
         
         // Parser les données JSON
-        this.vtData = report.vt_data ? JSON.parse(report.vt_data) : null;
-        this.otxData = report.otx_data ? JSON.parse(report.otx_data) : null;
-        this.ipinfoData = report.ipinfo_data ? JSON.parse(report.ipinfo_data) : null;
+        try {
+          this.vtData = report.vt_data ? 
+            (typeof report.vt_data === 'string' ? JSON.parse(report.vt_data) : report.vt_data) 
+            : null;
+          this.otxData = report.otx_data ? 
+            (typeof report.otx_data === 'string' ? JSON.parse(report.otx_data) : report.otx_data) 
+            : null;
+          this.ipinfoData = report.ipinfo_data ? 
+            (typeof report.ipinfo_data === 'string' ? JSON.parse(report.ipinfo_data) : report.ipinfo_data) 
+            : null;
+        } catch (e) {
+          console.error('Erreur lors du parsing des données JSON:', e);
+        }
         
-        // Pré-remplir le formulaire de statut
         if (this.isAdmin) {
           this.statusForm.patchValue({
             status: report.status,
@@ -124,7 +129,6 @@ export class ReportDetailComponent implements OnInit {
         this.report = { ...this.report!, ...updatedReport };
         this.isUpdatingStatus = false;
         
-        // Réinitialiser le message après 3 secondes
         setTimeout(() => {
           this.successMessage = '';
         }, 3000);
@@ -215,13 +219,18 @@ export class ReportDetailComponent implements OnInit {
     }
   }
 
-  // Méthodes utilitaires pour l'affichage
   getSeverityClass(severity: string): string {
     const map: { [key: string]: string } = {
       'Faible': 'severity-low',
+      'low': 'severity-low',
       'Moyen': 'severity-medium',
+      'medium': 'severity-medium',
       'Élevé': 'severity-high',
-      'Critique': 'severity-critical'
+      'high': 'severity-high',
+      'Critique': 'severity-critical',
+      'critical': 'severity-critical',
+      'Informatif': 'severity-informational',
+      'informational': 'severity-informational'
     };
     return map[severity] || 'severity-default';
   }
@@ -229,14 +238,20 @@ export class ReportDetailComponent implements OnInit {
   getStatusClass(status: string): string {
     const map: { [key: string]: string } = {
       'En attente': 'status-pending',
+      'pending': 'status-pending',
+      'pending_review': 'status-pending',
       'Examiné': 'status-reviewed',
+      'in_progress': 'status-progress',
       'Atténué': 'status-mitigated',
-      'Faux positif': 'status-false-positive'
+      'completed': 'status-completed',
+      'Faux positif': 'status-false-positive',
+      'archived': 'status-archived'
     };
     return map[status] || 'status-default';
   }
 
   formatDate(dateString: string): string {
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleDateString('fr-FR', {
       year: 'numeric',

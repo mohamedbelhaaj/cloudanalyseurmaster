@@ -27,87 +27,48 @@ interface DownloadResult {
   providedIn: 'root'
 })
 export class ReportsService {
-  private apiUrl = 'http://127.0.0.1:8000/api/reports';
+  private apiUrl = 'http://localhost:8000/api/reports';
 
   constructor(private http: HttpClient) {}
 
   private headers(): HttpHeaders {
     const token = localStorage.getItem('access_token')?.trim();
-    let headers = new HttpHeaders();
-    
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-    
-    headers = headers.set('Content-Type', 'application/json');
-    headers = headers.set('Accept', 'application/json');
-    
-    return headers;
+    return new HttpHeaders()
+      .set('Authorization', `Bearer ${token || ''}`)
+      .set('Content-Type', 'application/json');
   }
 
   getReports(page: number = 1, filters?: Record<string, any>): Observable<PaginatedReportResponse> {
     let params = new HttpParams().set('page', page.toString());
-    
     if (filters) {
       Object.keys(filters).forEach(key => {
-        if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
+        if (filters[key] !== null && filters[key] !== undefined) {
           params = params.set(key, filters[key].toString());
         }
       });
     }
-
-    console.log('Fetching reports from:', this.apiUrl);
-    console.log('With params:', params.toString());
-    console.log('With headers:', this.headers());
-
-    return this.http.get<PaginatedReportResponse>(this.apiUrl, { 
-      params, 
-      headers: this.headers() 
-    }).pipe(
-      tap(response => {
-        console.log('Reports API Response:', response);
-        console.log('Number of reports:', response.results?.length || 0);
-      }),
-      catchError(this.handleError)
-    );
+    return this.http.get<PaginatedReportResponse>(this.apiUrl, { params, headers: this.headers() })
+      .pipe(catchError(this.handleError));
   }
 
   getReportById(id: string): Observable<ReportDetail> {
-    console.log('Fetching report by ID:', id);
-    
-    return this.http.get<ReportDetail>(`${this.apiUrl}/${id}/`, { 
-      headers: this.headers() 
-    }).pipe(
-      tap(report => console.log('Report detail received:', report)),
-      catchError(this.handleError)
-    );
+    return this.http.get<ReportDetail>(`${this.apiUrl}/${id}`, { headers: this.headers() })
+      .pipe(catchError(this.handleError));
   }
 
   createReport(reportData: Partial<Report>): Observable<Report> {
-    return this.http.post<Report>(`${this.apiUrl}/`, reportData, { 
-      headers: this.headers() 
-    }).pipe(
-      tap(report => console.log('Report created:', report)),
-      catchError(this.handleError)
-    );
+    return this.http.post<Report>(`${this.apiUrl}/`, reportData, { headers: this.headers() })
+      .pipe(catchError(this.handleError));
   }
 
   updateReportStatus(id: string, data: UpdateStatusRequest): Observable<Report> {
-    return this.http.post<Report>(`${this.apiUrl}/${id}/update_status/`, data, { 
-      headers: this.headers() 
-    }).pipe(
-      tap(report => console.log('Report status updated:', report)),
-      catchError(this.handleError)
-    );
+    return this.http.post<Report>(`${this.apiUrl}/${id}/update_status/`, data, { headers: this.headers() })
+      .pipe(catchError(this.handleError));
   }
 
   reviewReport(id: string, action: 'approve' | 'false_positive'): Observable<Report> {
-    return this.http.post<Report>(`${this.apiUrl}/${id}/review/`, { action }, { 
-      headers: this.headers() 
-    }).pipe(
-      tap(report => console.log('Report reviewed:', report)),
-      catchError(this.handleError)
-    );
+    return this.http.post<Report>(`${this.apiUrl}/${id}/review/`, { action }, { headers: this.headers() })
+      .pipe(catchError(this.handleError));
   }
 
   downloadPdf(id: string): Observable<DownloadResult> {
@@ -190,31 +151,17 @@ export class ReportsService {
       adminId,
       message
     }, { headers: this.headers() })
-    .pipe(
-      tap(response => console.log('Sent to admin:', response)),
-      catchError(this.handleError)
-    );
+    .pipe(catchError(this.handleError));
   }
 
   deleteReport(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}/`, { 
-      headers: this.headers() 
-    }).pipe(
-      tap(() => console.log('Report deleted:', id)),
-      catchError(this.handleError)
-    );
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.headers() })
+      .pipe(catchError(this.handleError));
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Une erreur est survenue';
     
-    console.error('HTTP Error Details:', {
-      status: error.status,
-      statusText: error.statusText,
-      url: error.url,
-      error: error.error
-    });
-
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Erreur réseau: ${error.error.message}`;
       console.error('Erreur côté client:', error.error.message);
@@ -228,7 +175,6 @@ export class ReportsService {
           } catch {
             errorMessage = 'Erreur lors du téléchargement du PDF';
           }
-          console.error('Blob error message:', errorMessage);
           observer.error(new Error(errorMessage));
         };
         reader.onerror = () => {
@@ -238,26 +184,13 @@ export class ReportsService {
       });
     } else {
       switch (error.status) {
-        case 0:   
-          errorMessage = 'Impossible de contacter le serveur. Vérifiez que le backend est démarré sur http://127.0.0.1:8000'; 
-          break;
-        case 400: 
-          errorMessage = 'Données invalides.'; 
-          break;
-        case 401: 
-          errorMessage = 'Non autorisé. Veuillez vous reconnecter.'; 
-          break;
-        case 403: 
-          errorMessage = 'Accès refusé.'; 
-          break;
-        case 404: 
-          errorMessage = 'Rapport non trouvé.'; 
-          break;
-        case 500: 
-          errorMessage = 'Erreur serveur.'; 
-          break;
-        default:  
-          errorMessage = `Erreur ${error.status}: ${error.statusText}`;
+        case 0:   errorMessage = 'Impossible de contacter le serveur.'; break;
+        case 400: errorMessage = 'Données invalides.'; break;
+        case 401: errorMessage = 'Non autorisé. Veuillez vous reconnecter.'; break;
+        case 403: errorMessage = 'Accès refusé.'; break;
+        case 404: errorMessage = 'Rapport non trouvé.'; break;
+        case 500: errorMessage = 'Erreur serveur.'; break;
+        default:  errorMessage = `Erreur ${error.status}: ${error.statusText}`;
       }
       
       if (error.error && typeof error.error === 'object') {
@@ -279,7 +212,7 @@ export class ReportsService {
       }
     }
     
-    console.error('Final error message:', errorMessage);
+    console.error('Erreur complète:', error);
     return throwError(() => new Error(errorMessage));
   }
 }

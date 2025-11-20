@@ -1,12 +1,16 @@
 import { User } from './user.model';
 
 export interface Report {
-  id: number;
-  analyst: User;
-  assigned_to: User;
+  id: string;  // Changed from number to string
+  analyst: {
+    id: number;
+    username: string;
+    role: string;
+  };
+  assigned_to: any;  // or proper type
   input_type: string;
   input_value: string;
-  file_name?: string;
+  file_name: string | null;
   engine_used: string;
   vt_data: any;
   otx_data: any;
@@ -16,9 +20,8 @@ export interface Report {
   status: string;
   notes: string;
   created_at: string;
-  reviewed_at?: string;
+  reviewed_at: string | null;
 }
-
 export interface ReportDetail extends Report {
   tasks?: Task[];
 }
