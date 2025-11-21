@@ -1,0 +1,515 @@
+// ============================================
+// Task List Component – Modern Dark Theme
+// ============================================
+
+@use "sass:color";
+
+// ---------- VARIABLES ----------
+$color-primary: #dc2626;
+$color-primary-dark: #991b1b;
+$color-primary-light: #ef4444;
+$color-secondary: #0ea5e9;
+$color-success: #22c55e;
+$color-warning: #f59e0b;
+
+$bg-dark-900: #0a0a0a;
+$bg-dark-800: #111827;
+$bg-dark-700: #1f2937;
+$bg-dark-600: #374151;
+
+$border-color: #4b5563;
+$text-primary: #f9fafb;
+$text-secondary: #9ca3af;
+$text-muted: #6b7280;
+
+$shadow-glow: 0 0 30px rgba($color-primary, 0.15);
+$shadow-elevated: 0 20px 40px rgba(0, 0, 0, 0.4);
+$transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+// ---------- HOST / CONTAINER ----------
+:host {
+  display: block;
+  min-height: calc(100vh - 80px);
+  padding: 2rem 3rem;
+  background: linear-gradient(135deg, $bg-dark-900 0%, $bg-dark-800 50%, $bg-dark-900 100%);
+  color: $text-primary;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+// Apply to component wrapper if :host doesn't work
+.task-list-container,
+.tasks-container,
+.main-content {
+  min-height: calc(100vh - 80px);
+  padding: 2rem 3rem;
+  background: linear-gradient(135deg, $bg-dark-900 0%, $bg-dark-800 50%, $bg-dark-900 100%);
+  color: $text-primary;
+}
+
+// ---------- PAGE HEADER ----------
+.page-header {
+  margin-bottom: 2rem;
+  
+  h1, .page-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 0 0 0.5rem 0;
+  }
+}
+
+// ---------- LOADING STATE ----------
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: $text-secondary;
+  font-size: 1.1rem;
+  font-weight: 500;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, $bg-dark-700 0%, $bg-dark-800 100%);
+  border: 1px solid $border-color;
+  border-radius: 16px;
+
+  &::before {
+    content: '';
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba($color-primary, 0.3);
+    border-top-color: $color-primary;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+}
+
+// ---------- ALERTS ----------
+.alert {
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+  animation: slideIn 0.4s ease-out;
+}
+
+.alert-danger {
+  background: rgba($color-primary-light, 0.15);
+  border: 1px solid rgba($color-primary, 0.3);
+  border-left: 4px solid $color-primary;
+  color: $color-primary-light;
+}
+
+// ---------- TABLE ----------
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: linear-gradient(135deg, $bg-dark-700 0%, $bg-dark-800 100%);
+  border: 1px solid $border-color;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: $shadow-elevated;
+
+  thead {
+    background: linear-gradient(135deg, $bg-dark-900 0%, rgba($bg-dark-800, 0.95) 100%);
+
+    tr {
+      border-bottom: 2px solid $border-color;
+    }
+
+    th {
+      padding: 1.25rem 1.5rem;
+      text-align: left;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: $color-primary;
+      background: transparent;
+      border: none;
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba($color-primary, 0.4), transparent);
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      transition: $transition-smooth;
+      cursor: pointer;
+      border-bottom: 1px solid rgba($border-color, 0.4);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background: rgba($color-primary, 0.1);
+        
+        td {
+          color: $text-primary;
+        }
+      }
+
+      td {
+        padding: 1.15rem 1.5rem;
+        color: $text-secondary;
+        font-size: 0.95rem;
+        transition: $transition-smooth;
+        border: none;
+        vertical-align: middle;
+      }
+    }
+  }
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background: rgba($bg-dark-900, 0.4);
+
+  &:hover {
+    background: rgba($color-primary, 0.1);
+  }
+}
+
+// ---------- BUTTONS ----------
+.btn {
+  padding: 0.6rem 1.2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: 'Orbitron', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: $transition-smooth;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    transform: translate(-50%, -50%);
+    transition: width 0.5s, height 0.5s;
+  }
+
+  &:hover::before {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-dark 100%);
+  color: $text-primary;
+  box-shadow: 0 4px 15px rgba($color-primary, 0.4);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba($color-primary, 0.5), $shadow-glow;
+  }
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  position: relative;
+  transition: $transition-smooth;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 18px;
+    height: 2px;
+    background: $text-secondary;
+    transition: $transition-smooth;
+  }
+
+  &::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  &::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+
+  &:hover {
+    background: rgba($color-primary, 0.2);
+
+    &::before,
+    &::after {
+      background: $color-primary;
+    }
+  }
+}
+
+// ---------- TEXT UTILITIES ----------
+.text-muted {
+  color: $text-muted;
+  text-align: center;
+  padding: 4rem 2rem;
+  font-size: 1.1rem;
+  background: linear-gradient(135deg, $bg-dark-700 0%, $bg-dark-800 100%);
+  border: 1px solid $border-color;
+  border-radius: 16px;
+  box-shadow: $shadow-elevated;
+}
+
+// ---------- MODAL ----------
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba($bg-dark-900, 0.9);
+  backdrop-filter: blur(10px);
+  z-index: 1040;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+
+  &.show {
+    display: flex;
+  }
+}
+
+.modal-dialog {
+  width: 100%;
+  max-width: 600px;
+  animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-content {
+  background: linear-gradient(145deg, $bg-dark-700 0%, $bg-dark-800 100%);
+  border: 1px solid $border-color;
+  border-radius: 24px;
+  box-shadow: $shadow-elevated, 0 0 60px rgba($color-primary, 0.2);
+  overflow: hidden;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, $color-primary, $color-primary-light, $color-primary, transparent);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba($border-color, 0.6);
+  background: rgba($bg-dark-900, 0.5);
+}
+
+.modal-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.35rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.modal-body {
+  padding: 2rem;
+
+  p {
+    margin: 0 0 1.1rem 0;
+    color: $text-secondary;
+    font-size: 1rem;
+    line-height: 1.7;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    b {
+      color: $text-primary;
+      font-weight: 600;
+      min-width: 120px;
+    }
+  }
+
+  hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, $border-color, transparent);
+    margin: 1.75rem 0;
+  }
+}
+
+// ---------- ANIMATIONS ----------
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+// ---------- RESPONSIVE ----------
+@media (max-width: 992px) {
+  :host,
+  .task-list-container,
+  .tasks-container,
+  .main-content {
+    padding: 1.5rem;
+  }
+
+  .table thead th,
+  .table tbody td {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  :host,
+  .task-list-container,
+  .tasks-container,
+  .main-content {
+    padding: 1rem;
+  }
+
+  .table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    thead th {
+      padding: 1rem;
+      font-size: 0.7rem;
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 0.875rem 1rem;
+      font-size: 0.875rem;
+    }
+  }
+
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+
+  .modal-header {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+
+    p {
+      flex-direction: column;
+      gap: 0.25rem;
+
+      b {
+        min-width: auto;
+      }
+    }
+  }
+
+  .modal-title {
+    font-size: 1.15rem;
+  }
+
+  .btn {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .table thead th:nth-child(4),
+  .table tbody td:nth-child(4) {
+    display: none;
+  }
+}

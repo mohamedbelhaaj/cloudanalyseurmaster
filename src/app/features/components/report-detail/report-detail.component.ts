@@ -12,7 +12,7 @@ import { User } from '../../../core/models/user.model';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './report-detail.component.html',
-  styleUrls: ['./report-detail.component.css']
+  styleUrls: ['./report-detail.component.scss']
 })
 export class ReportDetailComponent implements OnInit {
   report: ReportDetail | null = null;
@@ -182,7 +182,7 @@ export class ReportDetailComponent implements OnInit {
   navigateToCreateTask(): void {
     if (!this.report) return;
     
-    this.router.navigate(['/tasks/create'], {
+    this.router.navigate(['/tasks'], {
       queryParams: {
         reportId: this.report.id,
         reportTitle: this.report.input_value
@@ -193,7 +193,7 @@ export class ReportDetailComponent implements OnInit {
   navigateToSendToAdmin(): void {
     if (!this.report) return;
     
-    this.router.navigate(['/reports/send-to-admin'], {
+    this.router.navigate(['/sendtoadmin'], {
       queryParams: {
         reportId: this.report.id,
         reportTitle: this.report.input_value

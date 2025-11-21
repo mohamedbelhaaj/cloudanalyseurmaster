@@ -1,0 +1,651 @@
+// ============================================
+// Dark Theme Styles - SCSS Version
+// ============================================
+
+@use "sass:color";
+
+// ---------- FONTS ----------
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+// ---------- VARIABLES ----------
+$primary-red: #dc2626;
+$primary-red-dark: #991b1b;
+
+$bg-dark-900: #0a0a0a;
+$bg-dark-800: #111827;
+$bg-dark-700: #1f2937;
+$bg-dark-600: #374151;
+
+$dark-bg-1: #111827;
+$dark-bg-2: #1f2937;
+$dark-bg-3: #374151;
+
+$border-color: #4b5563;
+$text-light: #f9fafb;
+$text-secondary: #9ca3af;
+
+$danger: #b91c1c;
+$warning: #f59e0b;
+$success: #16a34a;
+$info: #0ea5e9;
+
+$shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-elevated: 0 20px 40px rgba(0, 0, 0, 0.4);
+$border-radius: 0.75rem;
+$border-radius-sm: 8px;
+
+$gradient-primary: linear-gradient(135deg, $primary-red 0%, $primary-red-dark 100%);
+$gradient-surface: linear-gradient(135deg, $dark-bg-2 0%, $dark-bg-1 100%);
+$transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+// ---------- MIXINS ----------
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin card-base {
+  background: $gradient-surface;
+  border: 1px solid $border-color;
+  border-radius: $border-radius;
+  box-shadow: $shadow;
+}
+
+@mixin badge-base {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// ---------- RESET ----------
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+// ---------- BASE ----------
+body {
+  font-family: 'Inter', sans-serif;
+  background: $bg-dark-900;
+  color: $text-light;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+// ---------- LAYOUT ----------
+.main-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+  min-height: calc(100vh - 100px);
+  background:
+    linear-gradient(120deg, rgba($bg-dark-900, 0.92), rgba($bg-dark-800, 0.95)),
+    url("../../../../assessts/analyst.jpg") center/cover no-repeat fixed;
+  box-shadow: 0 12px 36px rgba($primary-red, 0.05);
+
+  @media (max-width: 700px) {
+    padding: 1.5rem 1rem;
+  }
+}
+
+// ---------- LOADING ----------
+.loading-overlay {
+  @include flex-center;
+  flex-direction: column;
+  padding: 100px 20px;
+  color: $text-secondary;
+}
+
+.spinner-large {
+  width: 60px;
+  height: 60px;
+  border: 5px solid $border-color;
+  border-top-color: $primary-red;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: $text-light;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+// ---------- CARD ----------
+.card {
+  @include card-base;
+  margin-bottom: 30px;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(135deg, rgba(#1a1a2e, 0.95) 0%, rgba(#0f0f1a, 0.98) 100%);
+  border: 1px solid rgba($primary-red, 0.2);
+  backdrop-filter: blur(10px);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: $gradient-primary;
+  }
+
+  &:hover {
+    border-color: rgba($primary-red, 0.4);
+    box-shadow: $shadow-elevated, 0 0 30px rgba($primary-red, 0.1);
+  }
+}
+
+.card-content {
+  padding: 40px;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+  }
+}
+
+// ---------- TYPOGRAPHY ----------
+h3 {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: $primary-red;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+h4 {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+  margin-top: 30px;
+  color: $text-light;
+}
+
+h5 {
+  font-size: 1.1rem;
+  color: $text-light;
+  margin-bottom: 10px;
+}
+
+// ---------- ALERTS ----------
+.alert {
+  padding: 20px;
+  border-radius: $border-radius;
+  margin-bottom: 25px;
+  border-left: 4px solid;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .icon {
+    font-size: 1.3rem;
+  }
+
+  &-danger {
+    background: rgba($danger, 0.1);
+    border-left-color: $danger;
+    color: red;
+  }
+
+  &-success {
+    background: rgba($success, 0.1);
+    border-left-color: $success;
+    color: #bbf7d0;
+  }
+}
+
+// ---------- SECTIONS ----------
+.result-section {
+  margin-bottom: 40px;
+}
+
+.info-box {
+  background: rgba(#0d0d14, 0.9);
+  border: 1px solid rgba($border-color, 0.5);
+  padding: 20px;
+  border-radius: $border-radius-sm;
+  margin-top: 20px;
+  backdrop-filter: blur(5px);
+
+  p {
+    color: $text-secondary;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+    line-height: 1.7;
+  }
+
+  strong {
+    color: $text-light;
+    font-weight: 600;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid $border-color;
+    margin: 1rem 0;
+  }
+}
+
+.notes-content {
+  color: $text-light;
+  padding: 10px;
+  background: rgba($dark-bg-1, 0.8);
+  border-radius: $border-radius-sm;
+  margin-top: 10px;
+  white-space: pre-wrap;
+}
+
+// ---------- STATS GRID ----------
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 25px;
+  margin: 40px 0;
+}
+
+.stat-card {
+  padding: 30px;
+  border-radius: $border-radius;
+  background: rgba($dark-bg-2, 0.9);
+  border: 1px solid $border-color;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  transition: $transition;
+  backdrop-filter: blur(5px);
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .stat-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+  }
+
+  .stat-number {
+    font-family: 'Orbitron', monospace;
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+
+  .stat-label {
+    font-size: 1rem;
+    color: $text-secondary;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
+  // Variants
+  &.malicious {
+    border-color: $danger;
+    .stat-number { color: $danger; }
+  }
+
+  &.suspicious {
+    border-color: $warning;
+    .stat-number { color: $warning; }
+  }
+
+  &.clean {
+    border-color: $success;
+    .stat-number { color: $success; }
+  }
+
+  &.neutral {
+    border-color: $info;
+    .stat-number { color: $info; }
+  }
+}
+
+// ---------- TABLE ----------
+.detection-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: rgba($dark-bg-2, 0.9);
+  border-radius: $border-radius-sm;
+  overflow: hidden;
+
+  th, td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid $border-color;
+  }
+
+  th {
+    background: $gradient-primary;
+    color: $text-light;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+  }
+
+  td {
+    color: $text-secondary;
+  }
+
+  tr:hover {
+    background: $dark-bg-3;
+  }
+}
+
+// ---------- BADGES ----------
+.badge {
+  @include badge-base;
+
+  &-danger {
+    background: rgba($danger, 0.2);
+    color: $danger;
+    border: 1px solid $danger;
+  }
+
+  &-success {
+    background: rgba($success, 0.2);
+    color: $success;
+    border: 1px solid $success;
+  }
+}
+
+// Severity Badges
+.severity {
+  &-low {
+    @include badge-base;
+    background: rgba($success, 0.2);
+    color: $success;
+    border: 1px solid $success;
+  }
+
+  &-medium {
+    @include badge-base;
+    background: rgba($warning, 0.2);
+    color: $warning;
+    border: 1px solid $warning;
+  }
+
+  &-high {
+    @include badge-base;
+    background: rgba(#ef4444, 0.2);
+    color: #ef4444;
+    border: 1px solid #ef4444;
+  }
+
+  &-critical {
+    @include badge-base;
+    background: rgba($danger, 0.3);
+    color: $danger;
+    border: 1px solid $danger;
+    animation: pulse 2s ease-in-out infinite;
+  }
+}
+
+// Status Badges
+.status {
+  &-pending {
+    @include badge-base;
+    background: rgba(#9ca3af, 0.2);
+    color: #9ca3af;
+    border: 1px solid #6b7280;
+  }
+
+  &-reviewed {
+    @include badge-base;
+    background: rgba($info, 0.2);
+    color: $info;
+    border: 1px solid $info;
+  }
+
+  &-mitigated {
+    @include badge-base;
+    background: rgba($success, 0.2);
+    color: $success;
+    border: 1px solid $success;
+  }
+
+  &-false-positive {
+    @include badge-base;
+    background: rgba(#6b7280, 0.2);
+    color: #6b7280;
+    border: 1px solid #4b5563;
+  }
+}
+
+// ---------- PULSE LIST ----------
+.pulse-list {
+  margin-top: 20px;
+}
+
+.pulse-item {
+  background: rgba($dark-bg-1, 0.9);
+  padding: 20px;
+  border-radius: $border-radius-sm;
+  margin-bottom: 15px;
+  border-left: 3px solid $primary-red;
+}
+
+.pulse-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tag {
+  background: $dark-bg-3;
+  color: $primary-red;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  border: 1px solid $primary-red;
+}
+
+.pulse-date {
+  color: $text-secondary;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+.vt-link {
+  margin-top: 20px;
+}
+
+.no-data {
+  color: $text-secondary;
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+}
+
+// ---------- BUTTONS ----------
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.btn {
+  background: $gradient-primary;
+  color: $text-light;
+  border: none;
+  padding: 15px 30px;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: 'Orbitron', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  transition: $transition;
+  box-shadow: 0 5px 15px rgba($primary-red, 0.3);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba($primary-red, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &-secondary {
+    background: $dark-bg-3;
+    border: 1px solid $border-color;
+    box-shadow: none;
+
+    &:hover:not(:disabled) {
+      background: $border-color;
+      border-color: $text-secondary;
+      box-shadow: $shadow;
+    }
+  }
+
+  &-success {
+    background: linear-gradient(135deg, $success 0%, #14532d 100%);
+  }
+
+  &-warning {
+    background: linear-gradient(135deg, $warning 0%, #78350f 100%);
+  }
+}
+
+// ---------- FORMS ----------
+.status-update-section {
+  margin-top: 40px;
+  padding-top: 40px;
+  border-top: 2px solid $border-color;
+}
+
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: $text-secondary;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 15px 20px;
+  font-size: 1rem;
+  background-color: rgba($dark-bg-1, 0.9);
+  border: 2px solid $border-color;
+  border-radius: $border-radius-sm;
+  color: $text-light;
+  font-family: 'Inter', sans-serif;
+  transition: $transition;
+
+  &:focus {
+    border-color: $primary-red;
+    box-shadow: 0 0 0 3px rgba($primary-red, 0.1);
+    outline: none;
+  }
+}
+
+textarea.form-control {
+  min-height: 120px;
+  resize: vertical;
+}
+
+select.form-control {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+0 24 24' filtroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 20px;
+  padding-right: 50px;
+}
+
+// ---------- ANIMATIONS ----------
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+// ---------- RESPONSIVE ----------
+@media (max-width: 768px) {
+  .main-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .card-content {
+    padding: 20px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .button-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  h3 {
+    font-size: 1.2rem;
+  }
+
+  .detection-table {
+    font-size: 0.85rem;
+
+    th, td {
+      padding: 10px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .main-container {
+    padding: 1rem 0.5rem;
+  }
+
+  .card-content {
+    padding: 15px;
+  }
+
+  h3 {
+    font-size: 1rem;
+  }
+}

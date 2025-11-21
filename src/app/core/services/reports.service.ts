@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpErrorResponse, HttpResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
-import { 
-  Report, 
-  ReportDetail, 
-  UpdateStatusRequest, 
-  ReviewReportRequest 
+import { catchError, map } from 'rxjs/operators';
+import {
+  Report,
+  ReportDetail,
+  UpdateStatusRequest,
+  ReviewReportRequest
 } from '../models/reports.model';
 import { SendToAdminRequest, SendToAdminResponse } from '@core/models/sendtoadmin';
 
@@ -52,7 +52,7 @@ export class ReportsService {
   }
 
   getReportById(id: string): Observable<ReportDetail> {
-    return this.http.get<ReportDetail>(`${this.apiUrl}/${id}`, { headers: this.headers() })
+    return this.http.get<ReportDetail>(`${this.apiUrl}/${id}/`, { headers: this.headers() })
       .pipe(catchError(this.handleError));
   }
 
@@ -83,7 +83,7 @@ export class ReportsService {
       map((response: HttpResponse<Blob>) => {
         const contentDisposition = response.headers.get('content-disposition');
         let filename = `report_${id}.pdf`;
-        
+
         if (contentDisposition) {
           const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
           if (matches != null && matches[1]) {
@@ -92,7 +92,7 @@ export class ReportsService {
         }
 
         const blob = response.body as Blob;
-        
+
         if (!blob || blob.size === 0) {
           throw new Error('Le fichier PDF est vide');
         }
@@ -104,7 +104,7 @@ export class ReportsService {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         setTimeout(() => window.URL.revokeObjectURL(url), 100);
 
         return {
@@ -129,7 +129,7 @@ export class ReportsService {
       map((response: HttpResponse<Blob>) => {
         const contentDisposition = response.headers.get('content-disposition');
         let filename = `report_${id}.pdf`;
-        
+
         if (contentDisposition) {
           const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
           if (matches != null && matches[1]) {
@@ -146,22 +146,35 @@ export class ReportsService {
     );
   }
 
+  /**
+   * Send report to admin
+   * NOTE: Adjust the endpoint and payload based on your Django backend
+   * Common Django endpoint patterns:
+   * - /api/reports/{id}/send_to_admin/
+   * - /api/reports/{id}/assign_admin/
+   * - /api/reports/{id}/send-admin/
+   */
   sendToAdmin(reportId: string, adminId: number, message?: string): Observable<SendToAdminResponse> {
-    return this.http.post<SendToAdminResponse>(`${this.apiUrl}/${reportId}/send-admin/`, {
-      adminId,
-      message
-    }, { headers: this.headers() })
-    .pipe(catchError(this.handleError));
+    const payload = {
+      admin_id: adminId,      // Django typically uses snake_case
+      message: message || ''
+    };
+
+    return this.http.post<SendToAdminResponse>(
+      `${this.apiUrl}/${reportId}/send_to_admin/`,  // Adjust endpoint if needed
+      payload,
+      { headers: this.headers() }
+    ).pipe(catchError(this.handleError));
   }
 
   deleteReport(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.headers() })
+    return this.http.delete<void>(`${this.apiUrl}/${id}/`, { headers: this.headers() })
       .pipe(catchError(this.handleError));
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Une erreur est survenue';
-    
+
     if (error.error instanceof ErrorEvent) {
       errorMessage = `Erreur réseau: ${error.error.message}`;
       console.error('Erreur côté client:', error.error.message);
@@ -188,11 +201,11 @@ export class ReportsService {
         case 400: errorMessage = 'Données invalides.'; break;
         case 401: errorMessage = 'Non autorisé. Veuillez vous reconnecter.'; break;
         case 403: errorMessage = 'Accès refusé.'; break;
-        case 404: errorMessage = 'Rapport non trouvé.'; break;
+        case 404: errorMessage = 'Ressource non trouvée.'; break;
         case 500: errorMessage = 'Erreur serveur.'; break;
         default:  errorMessage = `Erreur ${error.status}: ${error.statusText}`;
       }
-      
+
       if (error.error && typeof error.error === 'object') {
         const errors: string[] = [];
         Object.keys(error.error).forEach(key => {
@@ -211,7 +224,7 @@ export class ReportsService {
         }
       }
     }
-    
+
     console.error('Erreur complète:', error);
     return throwError(() => new Error(errorMessage));
   }

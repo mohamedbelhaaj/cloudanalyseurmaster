@@ -1,13 +1,17 @@
+// Backend expects "admin_id" not "assigned_to_id"
 export interface SendToAdminRequest {
-  assigned_to_id: string;
+  admin_id: string;  // Backend expects admin_id as number
   message?: string;
 }
 
 export interface SendToAdminResponse {
   id: string;
   message: string;
-  assigned_to_id: string;
-  previous_assigned_to?: string;
+  admin_id?: number;
+  assigned_to?: number;
+  assigned_to_id?: number;
+  previous_assigned_to?: number | string;
   updated_at: string;
   status?: string;
+  detail?: string;
 }

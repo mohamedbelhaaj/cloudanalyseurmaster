@@ -40,7 +40,7 @@ export class ReportsTableComponent implements OnInit {
   }
 
   createTask(report: Report): void {
-    this.router.navigate(['/tasks/create'], {
+    this.router.navigate(['/tasks'], {
       queryParams: {
         reportId: report.id,
         reportTitle: report.input_value

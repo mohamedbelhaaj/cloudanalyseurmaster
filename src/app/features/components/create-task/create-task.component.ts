@@ -152,7 +152,7 @@ export class CreateTaskComponent implements OnInit {
     if (this.reportId) {
       this.router.navigate(['/reports', this.reportId]);
     } else {
-      this.router.navigate(['/reports']);
+      this.router.navigate(['/tasksss']);
     }
   }
 
