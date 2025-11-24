@@ -3,40 +3,158 @@ import { Report } from '../../../core/models/reports.model';
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReportsService } from '../../../core/services/reports.service';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { AuthService } from '@core/services/auth.service';
+import { User } from '@core/models/user.model';
 
 @Component({
   selector: 'app-reports-table',
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './reports-table.component.html',
-  styleUrls: ['./reports-table.component.css']
+  styleUrls: ['./reports-table.component.scss']
 })
 export class ReportsTableComponent implements OnInit {
-  @Input() reports: Report[] = [];
-  @Input() loading: boolean = false;
-  @Output() onView = new EventEmitter<string>();
-  @Output() onEdit = new EventEmitter<string>();
-  @Output() onDelete = new EventEmitter<string>();
-  @Output() onCreateTask = new EventEmitter<Report>();
+  reports: Report[] = [];
+  currentUser: User | null = null;
+  loading: boolean = false;
+  errorMessage: string = '';
+  successMessage: string = '';
+  
+  // Pagination
+  currentPage: number = 1;
+  totalCount: number = 0;
+  pageSize: number = 10;
+  totalPages: number = 0;
+  
+  // Filters
+  filterForm!: FormGroup;
+  isFiltering: boolean = false;
+  
+  // User role
+  isAdmin: boolean = false;
+  isAnalyst: boolean = false;
+
+  // Expose Math to template
+  Math = Math;
 
   constructor(
+    private reportsService: ReportsService,
+    private authService: AuthService,
     private router: Router,
-    private reportsService: ReportsService
+    private fb: FormBuilder
   ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.initializeFilterForm();
+    this.loadCurrentUser();
+    this.loadReports();
+  }
+
+  initializeFilterForm(): void {
+    this.filterForm = this.fb.group({
+      status: [''],
+      severity: [''],
+      input_type: [''],
+      search: ['']
+    });
+  }
+
+  loadCurrentUser(): void {
+    this.authService.currentUser$.subscribe({
+      next: (user) => {
+        this.currentUser = user;
+        if (user) {
+          this.isAdmin = user.role === 'admin';
+          this.isAnalyst = user.role === 'analyst';
+        }
+      }
+    });
+  }
+
+  loadReports(page: number = 1): void {
+    this.loading = true;
+    this.errorMessage = '';
+    this.currentPage = page;
+
+    const filters = this.getActiveFilters();
+
+    this.reportsService.getReports(page, filters).subscribe({
+      next: (response) => {
+        this.reports = response.results;
+        this.totalCount = response.count;
+        this.totalPages = Math.ceil(this.totalCount / this.pageSize);
+        this.loading = false;
+      },
+      error: (error: Error) => {
+        console.error('Erreur lors du chargement des rapports:', error);
+        this.errorMessage = error.message;
+        this.loading = false;
+      }
+    });
+  }
+
+  getActiveFilters(): Record<string, any> {
+    const filters: Record<string, any> = {};
+    const formValue = this.filterForm.value;
+
+    if (formValue.status) filters['status'] = formValue.status;
+    if (formValue.severity) filters['severity'] = formValue.severity;
+    if (formValue.input_type) filters['input_type'] = formValue.input_type;
+    if (formValue.search) filters['search'] = formValue.search;
+
+    return filters;
+  }
+
+  onFilterSubmit(): void {
+    this.isFiltering = true;
+    this.loadReports(1);
+    setTimeout(() => {
+      this.isFiltering = false;
+    }, 500);
+  }
+
+  onClearFilters(): void {
+    this.filterForm.reset({
+      status: '',
+      severity: '',
+      input_type: '',
+      search: ''
+    });
+    this.loadReports(1);
+  }
+
+  onPageChange(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
+    this.loadReports(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   viewReport(reportId: string): void {
-    this.onView.emit(reportId);
+    this.router.navigate(['/reports', reportId]);
   }
 
   editReport(reportId: string): void {
-    this.onEdit.emit(reportId);
+    this.router.navigate(['/reports', reportId, 'edit']);
   }
 
   deleteReport(reportId: string): void {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce rapport ?')) {
-      this.onDelete.emit(reportId);
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce rapport ?')) {
+      return;
     }
+
+    this.reportsService.deleteReport(reportId).subscribe({
+      next: () => {
+        this.successMessage = 'Rapport supprimé avec succès';
+        this.loadReports(this.currentPage);
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 3000);
+      },
+      error: (error: Error) => {
+        console.error('Erreur lors de la suppression:', error);
+        this.errorMessage = error.message;
+      }
+    });
   }
 
   createTask(report: Report): void {
@@ -48,30 +166,88 @@ export class ReportsTableComponent implements OnInit {
     });
   }
 
-  trackByReportId(index: number, report: Report): string {
-    return report.id;
+  sendToAdmin(report: Report): void {
+    this.router.navigate(['/sendtoadmin'], {
+      queryParams: {
+        reportId: report.id,
+        reportTitle: report.input_value
+      }
+    });
   }
 
-  severityBadge(severity: string): string {
-    const severityMap: { [key: string]: string } = {
-      'low': 'badge-low',
-      'medium': 'badge-medium',
-      'high': 'badge-high',
-      'critical': 'badge-critical',
-      'informational': 'badge-informational'
+  downloadPdf(reportId: string): void {
+    this.reportsService.downloadPdf(reportId).subscribe({
+      next: () => {
+        this.successMessage = 'PDF téléchargé avec succès';
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 3000);
+      },
+      error: (error: Error) => {
+        console.error('Erreur lors du téléchargement:', error);
+        this.errorMessage = 'Erreur lors du téléchargement du PDF';
+      }
+    });
+  }
+
+  // Helper methods
+  getSeverityClass(severity: string): string {
+    const map: { [key: string]: string } = {
+      'low': 'severity-low',
+      'medium': 'severity-medium',
+      'high': 'severity-high',
+      'critical': 'severity-critical',
+      'informational': 'severity-informational'
     };
-    return severityMap[severity.toLowerCase()] || 'badge-default';
+    return map[severity?.toLowerCase()] || 'severity-default';
   }
 
-  statusBadge(status: string): string {
-    const statusMap: { [key: string]: string } = {
+  getStatusClass(status: string): string {
+    const map: { [key: string]: string } = {
       'pending': 'status-pending',
       'pending_review': 'status-pending',
       'in_progress': 'status-progress',
       'completed': 'status-completed',
-      'archived': 'status-archived'
+      'archived': 'status-archived',
+      'false_positive': 'status-false-positive'
     };
-    return statusMap[status.toLowerCase()] || 'status-default';
+    return map[status?.toLowerCase()] || 'status-default';
+  }
+
+  getSeverityLabel(severity: string): string {
+    const map: { [key: string]: string } = {
+      'low': 'Faible',
+      'medium': 'Moyen',
+      'high': 'Élevé',
+      'critical': 'Critique',
+      'informational': 'Informatif'
+    };
+    return map[severity?.toLowerCase()] || severity;
+  }
+
+  getStatusLabel(status: string): string {
+    const map: { [key: string]: string } = {
+      'pending': 'En attente',
+      'pending_review': 'En attente de révision',
+      'in_progress': 'En cours',
+      'completed': 'Terminé',
+      'archived': 'Archivé',
+      'false_positive': 'Faux positif'
+    };
+    return map[status?.toLowerCase()] || status;
+  }
+
+  getInputTypeLabel(type: string): string {
+    const map: { [key: string]: string } = {
+      'url': 'URL',
+      'ip': 'Adresse IP',
+      'domain': 'Domaine',
+      'email': 'Email',
+      'hash': 'Hash',
+      'file': 'Fichier',
+      'text': 'Texte'
+    };
+    return map[type?.toLowerCase()] || type;
   }
 
   formatDate(dateString: string): string {
@@ -86,38 +262,18 @@ export class ReportsTableComponent implements OnInit {
     });
   }
 
-  getInputTypeLabel(type: string): string {
-    const typeMap: { [key: string]: string } = {
-      'url': 'URL',
-      'ip': 'Adresse IP',
-      'domain': 'Domaine',
-      'email': 'Email',
-      'hash': 'Hash',
-      'file': 'Fichier',
-      'text': 'Texte'
-    };
-    return typeMap[type.toLowerCase()] || type;
+  getPaginationRange(): number[] {
+    const range: number[] = [];
+    const delta = 2; // Pages to show around current page
+
+    for (let i = Math.max(2, this.currentPage - delta); i <= Math.min(this.totalPages - 1, this.currentPage + delta); i++) {
+      range.push(i);
+    }
+
+    return range;
   }
 
-  getSeverityLabel(severity: string): string {
-    const severityMap: { [key: string]: string } = {
-      'low': 'Faible',
-      'medium': 'Moyen',
-      'high': 'Élevé',
-      'critical': 'Critique',
-      'informational': 'Informatif'
-    };
-    return severityMap[severity.toLowerCase()] || severity;
-  }
-
-  getStatusLabel(status: string): string {
-    const statusMap: { [key: string]: string } = {
-      'pending': 'En attente',
-      'pending_review': 'En attente de révision',
-      'in_progress': 'En cours',
-      'completed': 'Terminé',
-      'archived': 'Archivé'
-    };
-    return statusMap[status.toLowerCase()] || status;
+  trackByReportId(index: number, report: Report): string {
+    return report.id;
   }
 }

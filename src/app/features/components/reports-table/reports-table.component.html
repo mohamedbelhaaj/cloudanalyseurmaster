@@ -1,103 +1,360 @@
-<div class="table-container">
-  <!-- Loading State -->
-  <div *ngIf="loading" class="loading-overlay">
-    <div class="spinner-large"></div>
-    <p>Chargement des rapports...</p>
+<div class="main-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h2>📋 Gestion des Rapports</h2>
+    <p class="subtitle">Consultez et gérez tous les rapports d'analyse</p>
   </div>
 
-  <!-- Empty State -->
-  <div *ngIf="!loading && reports.length === 0" class="empty-state">
-    <div class="empty-icon">📋</div>
-    <h3>Aucun rapport disponible</h3>
-    <p>Il n'y a actuellement aucun rapport à afficher.</p>
+  <!-- Success Message -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    <span class="icon">✓</span>
+    <span>{{ successMessage }}</span>
   </div>
 
-  <!-- Table -->
-  <div *ngIf="!loading && reports.length > 0" class="table-wrapper">
-    <table class="reports-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Valeur d'entrée</th>
-          <th>Type</th>
-          <th>Sévérité</th>
-          <th>Statut</th>
-          <th>Analyste</th>
-          <th>Assigné à</th>
-          <th>Date de création</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let r of reports; trackBy: trackByReportId" class="table-row">
-          <td class="text-center">
-            <span class="id-badge">#{{ r.id }}</span>
-          </td>
-          <td class="input-value" [title]="r.input_value">
-            {{ r.input_value | slice:0:50 }}{{ r.input_value.length > 50 ? '...' : '' }}
-          </td>
-          <td>
-            <span class="type-badge">{{ getInputTypeLabel(r.input_type) }}</span>
-          </td>
-          <td>
-            <span class="severity-badge" [ngClass]="severityBadge(r.severity)">
-              {{ getSeverityLabel(r.severity) }}
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    <span class="icon">⚠️</span>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Filters Card -->
+  <div class="card filter-card">
+    <div class="card-content">
+      <h3>🔍 Filtres de recherche</h3>
+      
+      <form [formGroup]="filterForm" (ngSubmit)="onFilterSubmit()">
+        <div class="filter-grid">
+          <!-- Search Input -->
+          <div class="form-group">
+            <label for="search" class="form-label">Rechercher</label>
+            <input 
+              type="text" 
+              id="search" 
+              class="form-control" 
+              formControlName="search"
+              placeholder="Rechercher par valeur..."
+            >
+          </div>
+
+          <!-- Status Filter -->
+          <div class="form-group">
+            <label for="status" class="form-label">Statut</label>
+            <select id="status" class="form-control" formControlName="status">
+              <option value="">Tous les statuts</option>
+              <option value="pending">En attente</option>
+              <option value="pending_review">En attente de révision</option>
+              <option value="in_progress">En cours</option>
+              <option value="completed">Terminé</option>
+              <option value="archived">Archivé</option>
+              <option value="false_positive">Faux positif</option>
+            </select>
+          </div>
+
+          <!-- Severity Filter -->
+          <div class="form-group">
+            <label for="severity" class="form-label">Sévérité</label>
+            <select id="severity" class="form-control" formControlName="severity">
+              <option value="">Toutes les sévérités</option>
+              <option value="informational">Informatif</option>
+              <option value="low">Faible</option>
+              <option value="medium">Moyen</option>
+              <option value="high">Élevé</option>
+              <option value="critical">Critique</option>
+            </select>
+          </div>
+
+          <!-- Input Type Filter -->
+          <div class="form-group">
+            <label for="input_type" class="form-label">Type d'entrée</label>
+            <select id="input_type" class="form-control" formControlName="input_type">
+              <option value="">Tous les types</option>
+              <option value="url">URL</option>
+              <option value="ip">Adresse IP</option>
+              <option value="domain">Domaine</option>
+              <option value="email">Email</option>
+              <option value="hash">Hash</option>
+              <option value="file">Fichier</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="isFiltering"
+          >
+            <span *ngIf="!isFiltering">🔍 Appliquer les filtres</span>
+            <span *ngIf="isFiltering">
+              <span class="spinner"></span> Filtrage...
             </span>
-          </td>
-          <td>
-            <span class="status-badge" [ngClass]="statusBadge(r.status)">
-              {{ getStatusLabel(r.status) }}
-            </span>
-          </td>
-          <td>
-            <div class="user-info">
-              <span class="user-icon">👤</span>
-              <span>{{ r.analyst.username }}</span>
-            </div>
-          </td>
-          <td>
-            <div class="user-info">
-              <span class="user-icon">🎯</span>
-              <span>{{ r.assigned_to.username }}</span>
-            </div>
-          </td>
-          <td>
-            <span class="date-text">{{ formatDate(r.created_at) }}</span>
-          </td>
-          <td>
-            <div class="action-buttons">
-              <button 
-                class="btn-action btn-view" 
-                (click)="viewReport(r.id)"
-                title="Voir les détails"
-              >
-                <span class="icon">👁</span>
-              </button>
-              <button 
-                class="btn-action btn-task" 
-                (click)="createTask(r)"
-                title="Créer une tâche"
-              >
-                <span class="icon">➕</span>
-              </button>
-              <button 
-                class="btn-action btn-edit" 
-                (click)="editReport(r.id)"
-                title="Modifier"
-              >
-                <span class="icon">✏️</span>
-              </button>
-              <button 
-                class="btn-action btn-delete" 
-                (click)="deleteReport(r.id)"
-                title="Supprimer"
-              >
-                <span class="icon">🗑</span>
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="onClearFilters()"
+          >
+            🔄 Réinitialiser
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Statistics Summary -->
+  <div class="stats-summary" *ngIf="!loading">
+    <div class="stat-item">
+      <div class="stat-icon">📊</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ totalCount }}</div>
+        <div class="stat-label">Total des rapports</div>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">📄</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ reports.length }}</div>
+        <div class="stat-label">Affichés</div>
+      </div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-icon">📑</div>
+      <div class="stat-content">
+        <div class="stat-value">{{ currentPage }}/{{ totalPages }}</div>
+        <div class="stat-label">Page</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reports Table Card -->
+  <div class="card">
+    <div class="card-content">
+      <h3>📋 Liste des rapports</h3>
+
+      <!-- Loading State -->
+      <div *ngIf="loading" class="loading-overlay">
+        <div class="spinner-large"></div>
+        <p>Chargement des rapports...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loading && reports.length === 0" class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h3>Aucun rapport disponible</h3>
+        <p>Il n'y a actuellement aucun rapport à afficher.</p>
+      </div>
+
+      <!-- Table -->
+      <div *ngIf="!loading && reports.length > 0" class="table-wrapper">
+        <div class="table-responsive">
+          <table class="reports-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Valeur d'entrée</th>
+                <th>Type</th>
+                <th>Sévérité</th>
+                <th>Score</th>
+                <th>Statut</th>
+                <th>Analyste</th>
+                <th>Assigné à</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let report of reports; trackBy: trackByReportId" class="table-row">
+                <!-- ID -->
+                <td class="text-center">
+                  <span class="id-badge">#{{ report.id.slice(0, 8) }}</span>
+                </td>
+
+                <!-- Input Value -->
+                <td class="input-value" [title]="report.input_value">
+                  <div class="truncate">
+                    {{ report.input_value }}
+                  </div>
+                </td>
+
+                <!-- Input Type -->
+                <td>
+                  <span class="type-badge">
+                    {{ getInputTypeLabel(report.input_type) }}
+                  </span>
+                </td>
+
+                <!-- Severity -->
+                <td>
+                  <span class="badge" [ngClass]="getSeverityClass(report.severity)">
+                    {{ getSeverityLabel(report.severity) }}
+                  </span>
+                </td>
+
+                <!-- Threat Score -->
+                <td class="text-center">
+                  <div class="score-badge" [ngClass]="getSeverityClass(report.severity)">
+                    {{ report.threat_score | number:'1.0-0' }}
+                  </div>
+                </td>
+
+                <!-- Status -->
+                <td>
+                  <span class="badge" [ngClass]="getStatusClass(report.status)">
+                    {{ getStatusLabel(report.status) }}
+                  </span>
+                </td>
+
+                <!-- Analyst -->
+                <td>
+                  <div class="user-info">
+                    <span class="user-icon">👤</span>
+                    <span>{{ report.analyst.username }}</span>
+                  </div>
+                </td>
+
+                <!-- Assigned To -->
+                <td>
+                  <div class="user-info">
+                    <span class="user-icon">🎯</span>
+                    <span>{{ report.assigned_to.username }}</span>
+                  </div>
+                </td>
+
+                <!-- Created Date -->
+                <td class="date-column">
+                  <span class="date-text">{{ formatDate(report.created_at) }}</span>
+                </td>
+
+                <!-- Actions -->
+                <td>
+                  <div class="action-buttons">
+                    <!-- View Button -->
+                    <button 
+                      class="btn-action btn-view" 
+                      (click)="viewReport(report.id)"
+                      title="Voir les détails"
+                    >
+                      <span class="icon">👁️</span>
+                    </button>
+
+                    <!-- Download PDF (Analyst) -->
+                    <button 
+                      *ngIf="isAnalyst"
+                      class="btn-action btn-download" 
+                      (click)="downloadPdf(report.id)"
+                      title="Télécharger PDF"
+                    >
+                      <span class="icon">📥</span>
+                    </button>
+
+                    <!-- Create Task (Analyst) -->
+                    <button 
+                      *ngIf="isAnalyst"
+                      class="btn-action btn-task" 
+                      (click)="createTask(report)"
+                      title="Créer une tâche"
+                    >
+                      <span class="icon">➕</span>
+                    </button>
+
+                    <!-- Send to Admin (Analyst) -->
+                    <button 
+                      *ngIf="isAnalyst"
+                      class="btn-action btn-send" 
+                      (click)="sendToAdmin(report)"
+                      title="Envoyer à l'admin"
+                    >
+                      <span class="icon">📤</span>
+                    </button>
+
+                    <!-- Edit Button (Admin) -->
+                    <button 
+                      *ngIf="isAdmin"
+                      class="btn-action btn-edit" 
+                      (click)="editReport(report.id)"
+                      title="Modifier"
+                    >
+                      <span class="icon">✏️</span>
+                    </button>
+
+                    <!-- Delete Button (Admin) -->
+                    <button 
+                      *ngIf="isAdmin"
+                      class="btn-action btn-delete" 
+                      (click)="deleteReport(report.id)"
+                      title="Supprimer"
+                    >
+                      <span class="icon">🗑️</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="!loading && reports.length > 0 && totalPages > 1" class="pagination-container">
+        <div class="pagination">
+          <!-- Previous Button -->
+          <button 
+            class="pagination-btn"
+            [disabled]="currentPage === 1"
+            (click)="onPageChange(currentPage - 1)"
+          >
+            ← Précédent
+          </button>
+
+          <!-- First Page -->
+          <button 
+            class="pagination-number"
+            [class.active]="currentPage === 1"
+            (click)="onPageChange(1)"
+          >
+            1
+          </button>
+
+          <!-- Ellipsis before -->
+          <span *ngIf="currentPage > 4" class="pagination-ellipsis">...</span>
+
+          <!-- Page Numbers -->
+          <button 
+            *ngFor="let page of getPaginationRange()"
+            class="pagination-number"
+            [class.active]="currentPage === page"
+            (click)="onPageChange(page)"
+          >
+            {{ page }}
+          </button>
+
+          <!-- Ellipsis after -->
+          <span *ngIf="currentPage < totalPages - 3" class="pagination-ellipsis">...</span>
+
+          <!-- Last Page -->
+          <button 
+            *ngIf="totalPages > 1"
+            class="pagination-number"
+            [class.active]="currentPage === totalPages"
+            (click)="onPageChange(totalPages)"
+          >
+            {{ totalPages }}
+          </button>
+
+          <!-- Next Button -->
+          <button 
+            class="pagination-btn"
+            [disabled]="currentPage === totalPages"
+            (click)="onPageChange(currentPage + 1)"
+          >
+            Suivant →
+          </button>
+        </div>
+
+        <div class="pagination-info">
+          Affichage de {{ (currentPage - 1) * pageSize + 1 }} à {{ Math.min(currentPage * pageSize, totalCount) }} sur {{ totalCount }} rapports
+        </div>
+      </div>
+    </div>
   </div>
 </div>
