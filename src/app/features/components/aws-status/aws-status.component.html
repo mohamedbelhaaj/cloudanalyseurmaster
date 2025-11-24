@@ -1,0 +1,246 @@
+<!-- aws-status.component.html -->
+<div class="container-fluid">
+  <!-- Header -->
+  <div class="header-section">
+    <h2 class="page-title">AWS STATUS</h2>
+    <p class="subtitle">Monitor your AWS connection and resources</p>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner-border"></div>
+    <p class="loading-text">Loading AWS Status...</p>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error && !loading" class="alert alert-danger">
+    <i class="fas fa-exclamation-triangle"></i>
+    <span>{{ error }}</span>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading && statusData" class="status-container">
+    
+    <!-- Connection Status Card -->
+    <div class="card status-card">
+      <div class="status-header" [ngClass]="getConnectionStatusClass()">
+        <div class="status-icon">
+          <i class="fas fa-circle pulse-animation"></i>
+        </div>
+        <div class="status-info">
+          <h3>Connection Status</h3>
+          <p class="status-label">{{ getConnectionStatusText() }}</p>
+        </div>
+        <button class="btn-refresh" (click)="refreshStatus()" [disabled]="loading">
+          <i class="fas fa-sync-alt" [class.rotating]="loading"></i>
+        </button>
+      </div>
+
+      <!-- Not Configured State -->
+      <div *ngIf="!statusData.configured" class="status-body">
+        <div class="warning-message">
+          <i class="fas fa-exclamation-circle"></i>
+          <div>
+            <h4>No AWS Configuration Found</h4>
+            <p>{{ statusData.message }}</p>
+          </div>
+        </div>
+        <button class="btn btn-primary" (click)="navigateToConfig()">
+          <i class="fas fa-cog me-2"></i>Configure AWS
+        </button>
+      </div>
+
+      <!-- Connection Failed State -->
+      <div *ngIf="statusData.configured && !statusData.connected" class="status-body">
+        <div class="error-message">
+          <i class="fas fa-times-circle"></i>
+          <div>
+            <h4>Connection Failed</h4>
+            <p>{{ statusData.error }}</p>
+          </div>
+        </div>
+        <div class="config-summary">
+          <div class="config-item">
+            <span class="config-label">Configuration:</span>
+            <span class="config-value">{{ statusData.config?.name }}</span>
+          </div>
+          <div class="config-item">
+            <span class="config-label">Region:</span>
+            <span class="config-value">{{ getRegionLabel(statusData.config?.region!) }}</span>
+          </div>
+          <div class="config-item">
+            <span class="config-label">Last Updated:</span>
+            <span class="config-value">{{ statusData.config?.last_updated | date:'medium' }}</span>
+          </div>
+        </div>
+        <button class="btn btn-primary" (click)="navigateToConfig()">
+          <i class="fas fa-edit me-2"></i>Update Configuration
+        </button>
+      </div>
+
+      <!-- Connected State -->
+      <div *ngIf="statusData.configured && statusData.connected" class="status-body">
+        <div class="success-message">
+          <i class="fas fa-check-circle"></i>
+          <div>
+            <h4>AWS Connection Active</h4>
+            <p>All systems operational</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuration Details (only if connected) -->
+    <div *ngIf="statusData.configured && statusData.connected" class="details-grid">
+      
+      <!-- Configuration Info Card -->
+      <div class="card info-card">
+        <div class="card-header">
+          <i class="fas fa-cog"></i>
+          <h4>Configuration</h4>
+        </div>
+        <div class="card-body">
+          <div class="info-row">
+            <span class="info-label">Name</span>
+            <span class="info-value">{{ statusData.config?.name }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Region</span>
+            <span class="info-value badge-region">
+              <i class="fas fa-globe me-1"></i>
+              {{ getRegionLabel(statusData.config?.region!) }}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Last Updated</span>
+            <span class="info-value">{{ statusData.config?.last_updated | date:'short' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Auto Block</span>
+            <span class="info-value">
+              <span *ngIf="statusData.config?.auto_block_enabled" class="badge badge-success">
+                <i class="fas fa-shield-alt me-1"></i>
+                Enabled ({{ statusData.config?.auto_block_threshold }})
+              </span>
+              <span *ngIf="!statusData.config?.auto_block_enabled" class="badge badge-secondary">
+                Disabled
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resources Card -->
+      <div class="card info-card">
+        <div class="card-header">
+          <i class="fas fa-server"></i>
+          <h4>AWS Resources</h4>
+        </div>
+        <div class="card-body">
+          <div class="info-row" *ngIf="statusData.config?.vpc_id">
+            <span class="info-label">VPC ID</span>
+            <span class="info-value font-mono">{{ statusData.config?.vpc_id }}</span>
+          </div>
+          <div class="info-row" *ngIf="statusData.vpc_info">
+            <span class="info-label">VPC CIDR</span>
+            <span class="info-value font-mono">{{ statusData.vpc_info.cidr_block }}</span>
+          </div>
+          <div class="info-row" *ngIf="statusData.vpc_info">
+            <span class="info-label">Subnets</span>
+            <span class="info-value badge-count">{{ statusData.vpc_info.subnets_count }}</span>
+          </div>
+          <div class="info-row" *ngIf="statusData.config?.security_group_id">
+            <span class="info-label">Security Group</span>
+            <span class="info-value font-mono">{{ statusData.config?.security_group_id }}</span>
+          </div>
+          <div class="info-row" *ngIf="statusData.security_group">
+            <span class="info-label">SG Rules</span>
+            <span class="info-value">
+              <span class="badge-count me-2">
+                <i class="fas fa-arrow-down me-1"></i>{{ statusData.security_group.ingress_rules_count }}
+              </span>
+              <span class="badge-count">
+                <i class="fas fa-arrow-up me-1"></i>{{ statusData.security_group.egress_rules_count }}
+              </span>
+            </span>
+          </div>
+          <div class="info-row" *ngIf="!statusData.config?.vpc_id && !statusData.config?.security_group_id">
+            <span class="text-muted">No resources configured</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features Card -->
+      <div class="card info-card">
+        <div class="card-header">
+          <i class="fas fa-shield-alt"></i>
+          <h4>Security Features</h4>
+        </div>
+        <div class="card-body">
+          <div class="features-list">
+            <div class="feature-item">
+              <i class="fas" [ngClass]="statusData.config?.vpc_id ? 'fa-check-circle text-success' : 'fa-times-circle text-muted'"></i>
+              <span>VPC Configuration</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas" [ngClass]="statusData.config?.security_group_id ? 'fa-check-circle text-success' : 'fa-times-circle text-muted'"></i>
+              <span>Security Groups</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas" [ngClass]="statusData.config?.waf_configured ? 'fa-check-circle text-success' : 'fa-times-circle text-muted'"></i>
+              <span>AWS WAF</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas" [ngClass]="statusData.config?.nacl_configured ? 'fa-check-circle text-success' : 'fa-times-circle text-muted'"></i>
+              <span>Network ACL</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas" [ngClass]="statusData.config?.firewall_configured ? 'fa-check-circle text-success' : 'fa-times-circle text-muted'"></i>
+              <span>Network Firewall</span>
+            </div>
+          </div>
+          <div class="features-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" 
+                   [style.width.%]="(getConfiguredFeaturesCount() / getTotalFeatures()) * 100">
+              </div>
+            </div>
+            <span class="progress-text">
+              {{ getConfiguredFeaturesCount() }} / {{ getTotalFeatures() }} configured
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Available Regions Card -->
+      <div class="card info-card" *ngIf="statusData.regions_available && statusData.regions_available.length > 0">
+        <div class="card-header">
+          <i class="fas fa-globe-americas"></i>
+          <h4>Available Regions</h4>
+        </div>
+        <div class="card-body">
+          <div class="regions-grid">
+            <div class="region-badge" *ngFor="let region of statusData.regions_available">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>{{ region }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="actions-section" *ngIf="statusData.configured">
+      <button class="btn btn-secondary" (click)="navigateToConfig()">
+        <i class="fas fa-cog me-2"></i>Manage Configuration
+      </button>
+      <button class="btn btn-primary" (click)="refreshStatus()" [disabled]="loading">
+        <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+        <i *ngIf="!loading" class="fas fa-sync-alt me-2"></i>
+        Refresh Status
+      </button>
+    </div>
+
+  </div>
+</div>

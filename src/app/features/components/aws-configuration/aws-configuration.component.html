@@ -1,0 +1,341 @@
+<!-- aws-configuration.component.html -->
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">AWS Configurations</h2>
+    <button class="btn btn-primary" (click)="openCreateForm()" [disabled]="loading">
+      <i class="fas fa-plus me-2"></i>Add Configuration
+    </button>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading && !showForm" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Configurations List -->
+  <div *ngIf="!showForm && !loading" class="row">
+    <div class="col-12" *ngIf="configurations.length === 0">
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        No AWS configurations found. Click "Add Configuration" to create your first one.
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 mb-4" *ngFor="let config of configurations">
+      <div class="card h-100" [class.border-primary]="config.is_active">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            {{ config.name }}
+            <span *ngIf="config.is_active" class="badge bg-success ms-2">Active</span>
+          </h5>
+          <div class="dropdown">
+            <button class="btn btn-sm btn-link text-muted" type="button" 
+                    data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <a class="dropdown-item" (click)="openEditForm(config)">
+                  <i class="fas fa-edit me-2"></i>Edit
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="testCredentials(config.id!)">
+                  <i class="fas fa-check-circle me-2"></i>Test Credentials
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" (click)="getResources(config.id!)">
+                  <i class="fas fa-server me-2"></i>View Resources
+                </a>
+              </li>
+              <li *ngIf="!config.is_active">
+                <a class="dropdown-item" (click)="setActiveConfiguration(config.id!)">
+                  <i class="fas fa-star me-2"></i>Set as Active
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <a class="dropdown-item text-danger" (click)="deleteConfiguration(config.id!)">
+                  <i class="fas fa-trash me-2"></i>Delete
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <small class="text-muted">Region</small>
+            <p class="mb-0"><strong>{{ config.aws_region }}</strong></p>
+          </div>
+          <div class="mb-3">
+            <small class="text-muted">Access Key</small>
+            <p class="mb-0 font-monospace">{{ config.aws_access_key }}</p>
+          </div>
+          <div class="mb-3" *ngIf="config.vpc_id">
+            <small class="text-muted">VPC ID</small>
+            <p class="mb-0 font-monospace">{{ config.vpc_id }}</p>
+          </div>
+          <div class="mb-3" *ngIf="config.security_group_id">
+            <small class="text-muted">Security Group</small>
+            <p class="mb-0 font-monospace">{{ config.security_group_id }}</p>
+          </div>
+          <div class="mb-3">
+            <small class="text-muted">Auto Block</small>
+            <p class="mb-0">
+              <span *ngIf="config.auto_block_enabled" class="badge bg-success">
+                Enabled (Threshold: {{ config.auto_block_threshold }})
+              </span>
+              <span *ngIf="!config.auto_block_enabled" class="badge bg-secondary">Disabled</span>
+            </p>
+          </div>
+          <div>
+            <small class="text-muted">Created</small>
+            <p class="mb-0">{{ config.created_at | date:'short' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Configuration Form -->
+  <div *ngIf="showForm" class="card">
+    <div class="card-header">
+      <h4 class="mb-0">{{ isEditing ? 'Edit' : 'Create' }} AWS Configuration</h4>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="configForm" (ngSubmit)="onSubmit()">
+        <!-- Basic Information -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h5 class="border-bottom pb-2 mb-3">Basic Information</h5>
+          </div>
+          
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Configuration Name *</label>
+            <input type="text" class="form-control" formControlName="name" 
+                   placeholder="Production AWS">
+            <div class="invalid-feedback d-block" 
+                 *ngIf="configForm.get('name')?.invalid && configForm.get('name')?.touched">
+              Configuration name is required
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">AWS Region *</label>
+            <select class="form-select" formControlName="aws_region">
+              <option *ngFor="let region of awsRegions" [value]="region.value">
+                {{ region.label }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- AWS Credentials -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h5 class="border-bottom pb-2 mb-3">AWS Credentials</h5>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">AWS Access Key *</label>
+            <input type="text" class="form-control" formControlName="aws_access_key" 
+                   placeholder="AKIAIOSFODNN7EXAMPLE">
+            <div class="invalid-feedback d-block" 
+                 *ngIf="configForm.get('aws_access_key')?.invalid && configForm.get('aws_access_key')?.touched">
+              AWS Access Key is required
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">
+              AWS Secret Key {{ isEditing ? '(Leave blank to keep current)' : '*' }}
+            </label>
+            <input type="password" class="form-control" formControlName="aws_secret_key" 
+                   placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY">
+            <div class="invalid-feedback d-block" 
+                 *ngIf="!isEditing && configForm.get('aws_secret_key')?.invalid && configForm.get('aws_secret_key')?.touched">
+              AWS Secret Key is required
+            </div>
+          </div>
+
+          <div class="col-12 mb-3">
+            <label class="form-label">AWS Session Token (Optional - for AWS Academy)</label>
+            <textarea class="form-control" formControlName="aws_session_token" 
+                      rows="3" placeholder="Session token for temporary credentials"></textarea>
+            <small class="text-muted">Required for AWS Academy or temporary credentials</small>
+          </div>
+        </div>
+
+        <!-- VPC and Network Resources -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h5 class="border-bottom pb-2 mb-3">VPC and Network Resources</h5>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">VPC ID</label>
+            <input type="text" class="form-control" formControlName="vpc_id" 
+                   placeholder="vpc-xxxxxxxxx">
+            <small class="text-muted">Required for NACL blocking</small>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Security Group ID</label>
+            <input type="text" class="form-control" formControlName="security_group_id" 
+                   placeholder="sg-xxxxxxxxx">
+            <small class="text-muted">Default security group for blocking</small>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Isolation Security Group ID</label>
+            <input type="text" class="form-control" formControlName="isolation_sg_id" 
+                   placeholder="sg-xxxxxxxxx">
+            <small class="text-muted">Quarantine security group</small>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Network ACL ID</label>
+            <input type="text" class="form-control" formControlName="nacl_id" 
+                   placeholder="acl-xxxxxxxxx">
+            <small class="text-muted">Network ACL for IP blocking</small>
+          </div>
+        </div>
+
+        <!-- WAF Resources -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h5 class="border-bottom pb-2 mb-3">WAF Resources</h5>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">WAF Web ACL Name</label>
+            <input type="text" class="form-control" formControlName="waf_web_acl_name" 
+                   placeholder="my-web-acl">
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">WAF Web ACL ID</label>
+            <input type="text" class="form-control" formControlName="waf_web_acl_id" 
+                   placeholder="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">WAF IP Set Name</label>
+            <input type="text" class="form-control" formControlName="waf_ip_set_name" 
+                   placeholder="blocked-ips">
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">WAF IP Set ID</label>
+            <input type="text" class="form-control" formControlName="waf_ip_set_id" 
+                   placeholder="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+          </div>
+        </div>
+
+        <!-- Firewall and Logging -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h5 class="border-bottom pb-2 mb-3">Firewall and Logging</h5>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Network Firewall ARN</label>
+            <input type="text" class="form-control" formControlName="network_firewall_arn" 
+                   placeholder="arn:aws:network-firewall:...">
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">CloudWatch Log Group Name</label>
+            <input type="text" class="form-control" formControlName="log_group_name" 
+                   placeholder="/aws/network-firewall/logs">
+          </div>
+        </div>
+
+        <!-- Auto Block Settings -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h5 class="border-bottom pb-2 mb-3">Auto Block Settings</h5>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" 
+                     formControlName="auto_block_enabled" id="autoBlockEnabled">
+              <label class="form-check-label" for="autoBlockEnabled">
+                Enable Auto Block
+              </label>
+            </div>
+            <small class="text-muted">Automatically block IPs when threshold is reached</small>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Auto Block Threshold</label>
+            <input type="number" class="form-control" formControlName="auto_block_threshold" 
+                   min="1" max="50">
+            <small class="text-muted">Number of incidents before auto-blocking (1-50)</small>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" 
+                     formControlName="is_active" id="isActive">
+              <label class="form-check-label" for="isActive">
+                Set as Active Configuration
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Credential Test Result -->
+        <div *ngIf="credentialTestResult" class="alert" 
+             [class.alert-success]="credentialTestResult.success"
+             [class.alert-danger]="!credentialTestResult.success">
+          <i class="fas" 
+             [class.fa-check-circle]="credentialTestResult.success"
+             [class.fa-exclamation-circle]="!credentialTestResult.success"></i>
+          {{ credentialTestResult.message || credentialTestResult.error }}
+          
+          <div *ngIf="credentialTestResult.regions && credentialTestResult.regions.length > 0" 
+               class="mt-2">
+            <strong>Available Regions:</strong>
+            <div class="mt-1">
+              <span class="badge bg-secondary me-1" *ngFor="let region of credentialTestResult.regions">
+                {{ region }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-between align-items-center">
+          <button type="button" class="btn btn-secondary" (click)="closeForm()" 
+                  [disabled]="loading">
+            Cancel
+          </button>
+          
+          <div>
+            <button type="button" class="btn btn-info me-2" 
+                    *ngIf="isEditing && editingId"
+                    (click)="testCredentials(editingId)" 
+                    [disabled]="loading || testingCredentials">
+              <span *ngIf="testingCredentials" class="spinner-border spinner-border-sm me-2"></span>
+              <i *ngIf="!testingCredentials" class="fas fa-check-circle me-2"></i>
+              Test Credentials
+            </button>
+            
+            <button type="submit" class="btn btn-primary" 
+                    [disabled]="loading || configForm.invalid">
+              <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+              <i *ngIf="!loading" class="fas fa-save me-2"></i>
+              {{ isEditing ? 'Update' : 'Create' }} Configuration
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

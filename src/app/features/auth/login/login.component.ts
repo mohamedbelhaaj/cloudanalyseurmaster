@@ -49,7 +49,7 @@ loginForm!: FormGroup;
       this.authService.login(this.loginForm.value).subscribe({
         next: (response) => {
           this.loading = false;
-          this.router.navigate(['/dashboard']);
+          console.log("TOKEN" , response)
         },
         error: (error) => {
           this.loading = false;

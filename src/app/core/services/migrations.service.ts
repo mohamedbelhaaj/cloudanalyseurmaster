@@ -8,8 +8,7 @@ import { environment } from '../../../environments/environment'
   providedIn: 'root'
 })
 export class MigrationsService {
- private apiUrl = environment.apiUrl;
- private readonly api = 'http://127.0.0.1:8000/api/mitigations';
+ private apiUrl =  'http://127.0.0.1:8000/api/mitigations';
 
   constructor(private http: HttpClient) {}
 
