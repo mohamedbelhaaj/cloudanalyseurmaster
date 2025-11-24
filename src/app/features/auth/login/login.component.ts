@@ -50,6 +50,12 @@ loginForm!: FormGroup;
         next: (response) => {
           this.loading = false;
           console.log("TOKEN" , response)
+          const targetRoute = response.user.role === 'analyst'
+            ? '/dashboard'
+            : response.user.role === 'admin'
+              ? '/dashboardadmin'
+              : '/';
+          this.router.navigate([targetRoute]);
         },
         error: (error) => {
           this.loading = false;

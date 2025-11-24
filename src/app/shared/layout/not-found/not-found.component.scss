@@ -1,0 +1,356 @@
+.not-found-container {
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Fond + image cyber SOC */
+  background:
+    radial-gradient(circle at center, rgba(43, 0, 0, 0.8) 0%, rgba(9, 0, 0, 0.9) 70%, #000 100%),
+    url("../../../../assessts/chay$.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.not-found-card {
+  background: rgba(10, 0, 0, 0.8);
+  border-radius: 16px;
+  /* glow rouge */
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.4), 0 0 60px rgba(255, 0, 0, 0.2);
+  border: 1px solid rgba(255, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+  padding: 40px 30px;
+  width: 100%;
+  max-width: 600px;
+  max-height: calc(100vh - 40px);
+  text-align: center;
+  animation: fadeIn 0.5s ease-in;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.not-found-header {
+  margin-bottom: 24px;
+  flex-shrink: 0;
+
+  h1 {
+    font-size: 100px;
+    font-weight: 900;
+    color: #ff1c1c;
+    text-shadow: 
+      0 0 10px #ff1c1c, 
+      0 0 25px #ff0000,
+      0 0 50px rgba(255, 0, 0, 0.5);
+    margin-bottom: 8px;
+    letter-spacing: 4px;
+    line-height: 1;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      text-shadow: 
+        0 0 10px #ff1c1c, 
+        0 0 25px #ff0000,
+        0 0 50px rgba(255, 0, 0, 0.5);
+    }
+    50% {
+      text-shadow: 
+        0 0 20px #ff1c1c, 
+        0 0 40px #ff0000,
+        0 0 80px rgba(255, 0, 0, 0.8);
+    }
+  }
+
+  h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #ff4d4d;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+
+  p {
+    color: #ff8080;
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 0;
+  }
+}
+
+.not-found-content {
+  margin-bottom: 20px;
+  flex-shrink: 0;
+
+  .error-icon {
+    margin-bottom: 12px;
+
+    .icon-404 {
+      font-size: 60px;
+      display: inline-block;
+      animation: rotate 3s linear infinite;
+      filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.6));
+    }
+
+    @keyframes rotate {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  }
+
+  .error-description {
+    color: #ff8080;
+    font-size: 14px;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  .error-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+
+    li {
+      color: #ff4d4d;
+      font-size: 13px;
+      padding: 8px 20px;
+      border: 2px solid rgba(255, 50, 50, 0.6);
+      border-radius: 8px;
+      background: rgba(255, 0, 0, 0.05);
+      width: 100%;
+      max-width: 400px;
+      transition: all 0.3s;
+      position: relative;
+
+      &::before {
+        content: '⚠️';
+        margin-right: 8px;
+      }
+
+      &:hover {
+        border-color: #ff1c1c;
+        background: rgba(255, 0, 0, 0.12);
+        box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+        transform: translateX(5px);
+      }
+    }
+  }
+}
+
+.not-found-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  flex-shrink: 0;
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+    transition: all 0.3s;
+    width: 100%;
+    max-width: 300px;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #ff0000 0%, #770000 100%);
+    color: #fff;
+    border: 2px solid rgba(255, 0, 0, 0.6);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 0 15px #ff0000,
+        0 0 40px rgba(255, 0, 0, 0.8);
+      border-color: #ff1c1c;
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  .btn-secondary {
+    background: rgba(255, 0, 0, 0.1);
+    color: #ff8080;
+    border: 2px solid rgba(255, 50, 50, 0.6);
+
+    &:hover {
+      background: rgba(255, 0, 0, 0.2);
+      border-color: #ff1c1c;
+      color: #ff4d4d;
+      box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .not-found-container {
+    padding: 15px;
+  }
+
+  .not-found-card {
+    padding: 30px 20px;
+    max-height: calc(100vh - 30px);
+  }
+
+  .not-found-header {
+    margin-bottom: 16px;
+
+    h1 {
+      font-size: 70px;
+      margin-bottom: 6px;
+    }
+
+    h2 {
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      font-size: 12px;
+    }
+  }
+
+  .not-found-content {
+    margin-bottom: 16px;
+
+    .error-icon {
+      margin-bottom: 8px;
+
+      .icon-404 {
+        font-size: 50px;
+      }
+    }
+
+    .error-description {
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .error-list {
+      gap: 6px;
+
+      li {
+        font-size: 11px;
+        padding: 6px 14px;
+      }
+    }
+  }
+
+  .not-found-actions {
+    gap: 10px;
+
+    .btn-primary,
+    .btn-secondary {
+      padding: 10px 20px;
+      font-size: 13px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .not-found-container {
+    padding: 10px;
+  }
+
+  .not-found-card {
+    padding: 24px 16px;
+    max-height: calc(100vh - 20px);
+  }
+
+  .not-found-header {
+    margin-bottom: 12px;
+
+    h1 {
+      font-size: 50px;
+      margin-bottom: 4px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    p {
+      font-size: 11px;
+    }
+  }
+
+  .not-found-content {
+    margin-bottom: 12px;
+
+    .error-icon {
+      margin-bottom: 6px;
+
+      .icon-404 {
+        font-size: 40px;
+      }
+    }
+
+    .error-description {
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+
+    .error-list {
+      gap: 4px;
+
+      li {
+        font-size: 10px;
+        padding: 5px 12px;
+      }
+    }
+  }
+
+  .not-found-actions {
+    gap: 8px;
+
+    .btn-primary,
+    .btn-secondary {
+      padding: 8px 16px;
+      font-size: 12px;
+    }
+  }
+}
+

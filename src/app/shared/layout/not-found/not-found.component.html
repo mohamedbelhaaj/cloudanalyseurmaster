@@ -1,0 +1,31 @@
+<div class="not-found-container">
+  <div class="not-found-card">
+    <div class="not-found-header">
+      <h1>404</h1>
+      <h2>⚠️ Page Not Found</h2>
+      <p>The page you're looking for has been compromised or doesn't exist in our threat database.</p>
+    </div>
+
+    <div class="not-found-content">
+      <div class="error-icon">
+        <span class="icon-404">🔒</span>
+      </div>
+      <p class="error-description">
+        The requested endpoint could not be located. This might be due to:
+      </p>
+      <ul class="error-list">
+        <li>Invalid URL path</li>
+        <li>Access denied - insufficient permissions</li>
+      </ul>
+    </div>
+
+    <div class="not-found-actions">
+      <button class="btn-primary" (click)="goHome()">
+        🛡️ Return to Dashboard
+      </button>
+      <button class="btn-secondary" (click)="goToLogin()">
+        🔐 Back to Login
+      </button>
+    </div>
+  </div>
+</div>

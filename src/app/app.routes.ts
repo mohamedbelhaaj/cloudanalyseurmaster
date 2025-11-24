@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './features/auth/login/login.component';
-import { AnalystGuard } from '@core/guards/analyst.guard';
+import { analystGuard, adminGuard } from './core/guards/auth.guard';
+import { NotFoundComponent } from '@shared/layout/not-found/not-found.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -13,7 +14,7 @@ export const routes: Routes = [
   // },
   {
     path: 'dashboard',
-    canActivate : [AnalystGuard],
+    canActivate: [analystGuard],
     loadComponent: () =>
       import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
   },
@@ -75,14 +76,14 @@ export const routes: Routes = [
   },
   {
     path: 'dashboardadmin',
-    canActivate : [AnalystGuard],
+    canActivate: [adminGuard],
     loadComponent: () =>
       import('./features/admin/dashboard-admin/dashboard-admin.component').then(
         m => m.DashboardAdminComponent
       ),
   },
-  // {
-  //   path: '**',
-  //   redirectTo: 'dashboard',
-  // },
+  {
+    path: '**',
+    component : NotFoundComponent
+  },
 ];
