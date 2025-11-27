@@ -17,14 +17,10 @@ export const routes: Routes = [
     canActivate: [analystGuard],
     loadComponent: () =>
       import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+    
   },
-  {
-    path: 'reports',
-    loadComponent: () =>
-      import('./features/components/reports-table/reports-table.component').then(
-        (m) => m.ReportsTableComponent
-      ),
-  },
+
+ 
   {
     path: 'reports/:id',
     loadComponent: () =>
@@ -40,12 +36,7 @@ export const routes: Routes = [
       ),
   },
 
-  {
-    path: 'task',
-    loadComponent: () =>
-      import('./features/components/task-table/task-table.component').then(m => m.TaskTableComponent
-      ),
-  },
+
   {
     path: 'tasks',
     loadComponent: () =>
@@ -53,27 +44,13 @@ export const routes: Routes = [
       ),
   },
 
-  {
-    path: 'mitigations',
-    loadComponent: () =>
-      import('./features/components/migrations-table/migrations-table.component').then(
-        m => m.MigrationsTableComponent
-      ),
-  },
+ 
   {
     path: 'analyze',
     loadComponent: () =>
       import('./features/analyze/analyze.component').then(m => m.AnalyzeComponent),
   },
-  {
-    path: 'awsconf',
-    loadComponent: () =>
-      import('./features/components/aws-configuration/aws-configuration.component').then(m => m.AwsConfigurationComponent
-      ),
-  },
-  {path:'awsstatus',
-    loadComponent:()=>import('./features/components/aws-status/aws-status.component').then(m=>m.AwsStatusComponent)
-  },
+ 
   {
     path: 'dashboardadmin',
     canActivate: [adminGuard],
@@ -81,7 +58,38 @@ export const routes: Routes = [
       import('./features/admin/dashboard-admin/dashboard-admin.component').then(
         m => m.DashboardAdminComponent
       ),
+
   },
+   {
+    path: 'reports',
+    loadComponent: () =>
+      import('./features/components/reports-table/reports-table.component').then(
+        (m) => m.ReportsTableComponent
+      ),
+  },
+    {
+    path: 'task',
+    loadComponent: () =>
+      import('./features/components/task-table/task-table.component').then(m => m.TaskTableComponent
+      ),
+  },
+    {path:'awsstatus',
+    loadComponent:()=>import('./features/components/aws-status/aws-status.component').then(m=>m.AwsStatusComponent)
+  },
+   {
+    path: 'mitigations',
+    loadComponent: () =>
+      import('./features/components/migrations-table/migrations-table.component').then(
+        m => m.MigrationsTableComponent
+      ),
+  },
+   {
+    path: 'awsconf',
+    loadComponent: () =>
+      import('./features/components/aws-configuration/aws-configuration.component').then(m => m.AwsConfigurationComponent
+      ),
+  },
+
   {
     path: '**',
     component : NotFoundComponent

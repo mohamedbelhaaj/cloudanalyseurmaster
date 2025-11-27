@@ -1,10 +1,8 @@
 <nav class="navbar-admin">
   <div class="navbar-container">
-
     <!-- Logo & App Name -->
-    <a routerLink="/admin/dashboard" class="brand-link">
+    <a routerLink="/dashboardadmin" class="brand-link">
       <span class="brand-icon">
-        <!-- Bouclier SVG moderne -->
         <svg width="28" height="28" viewBox="0 0 28 28">
           <path d="M14 2l10 4v6c0 7-8.5 12-10 12S4 19 4 12V6z" fill="#fff"/>
           <path d="M14 3.2l9 3.6v5.2c0 6.47-7.6 11-9 11s-9-4.53-9-11V6.8z" fill="#22c55e" opacity="0.3"/>
@@ -15,85 +13,92 @@
 
     <!-- Menu navigation -->
     <div class="navbar-menu">
-      <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-link">
+      <a routerLink="/dashboardadmin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">
         <span class="nav-icon">
-          <!-- Dashboard icon SVG -->
-          <svg width="19" height="19" viewBox="0 0 24 24">
-            <rect x="3" y="5" width="14" height="14" rx="3" fill="#fff"/>
-            <path d="M17 12h-8m8 0l-3-3m3 3l-3 3" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+            <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
           </svg>
         </span>
         Dashboard
       </a>
-      <a routerLink="/admin/reports" routerLinkActive="active" class="nav-link">
+
+      <a routerLink="/reports" routerLinkActive="active" class="nav-link">
         <span class="nav-icon">
-          <!-- Reports SVG (ou texte) -->
-          <svg width="19" height="19" viewBox="0 0 24 24">
-            <rect x="3" y="5" width="14" height="14" rx="3" fill="#fff"/>
-            <path d="M17 12h-8m8 0l-3-3m3 3l-3 3" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/>
+            <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2"/>
+            <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2"/>
+            <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2"/>
           </svg>
         </span>
         Reports
       </a>
-      <a routerLink="/admin/mitigations" routerLinkActive="active" class="nav-link">
+       <a routerLink="/task" routerLinkActive="active" class="nav-link">
         <span class="nav-icon">
-          <!-- Mitigations SVG -->
-          <svg width="19" height="19" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10" stroke="#22c55e" stroke-width="2" fill="none"/>
-            <path d="M8 12l2 2 4-4" stroke="#dc2626" stroke-width="2" fill="none"/>
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2"/>
+            <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="2"/>
+            <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2"/>
+            <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2"/>
           </svg>
         </span>
-        Mitigations
+        Task
       </a>
-      <a routerLink="/admin/tasks" routerLinkActive="active" class="nav-link">
+
+      <a routerLink="/awsconf" routerLinkActive="active" class="nav-link">
         <span class="nav-icon">
-          <!-- Tasks SVG -->
-          <svg width="19" height="19" viewBox="0 0 24 24">
-            <rect x="3" y="5" width="14" height="14" rx="3" fill="#fff"/>
-            <path d="M17 12h-8m8 0l-3-3m3 3l-3 3" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="2"/>
+            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </span>
-        Tasks
+        awsconf
       </a>
-      <a routerLink="/admin/analyze" routerLinkActive="active" class="nav-link">
+
+      <a routerLink="/mitigations" routerLinkActive="active" class="nav-link">
         <span class="nav-icon">
-          <!-- Analyze SVG -->
-          <svg width="19" height="19" viewBox="0 0 24 24">
-            <rect x="3" y="5" width="14" height="14" rx="3" fill="#fff"/>
-            <path d="M17 12h-8m8 0l-3-3m3 3l-3 3" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="2"/>
+            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </span>
-        Analyze
+        Mitigation
       </a>
     </div>
 
-    <!-- User panel (dynamique) -->
+    <!-- User panel -->
     <div class="navbar-user" *ngIf="currentUser$ | async as user">
-      <!-- bouton notifications badge, désactive si tu n'en as pas -->
-      <button class="notification-btn">
+      <!-- Notifications -->
+      <button class="notification-btn" [class.has-notifications]="hasNotifications">
         <span class="notify-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24">
-            <path d="M18 16v-5a6 6 0 00-12 0v5a2 2 0 01-2 2h16a2 2 0 01-2-2z" fill="#f59e42"/>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="2"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2"/>
           </svg>
-          <span class="notify-badge"></span>
+          <span class="notify-badge" *ngIf="notificationCount > 0">{{ notificationCount }}</span>
         </span>
       </button>
-      <!-- Avatar et user info -->
-      <div class="user-info" tabindex="0">
+
+      <!-- User Info -->
+      <div class="user-info">
         <div class="user-avatar">{{ user.username.charAt(0).toUpperCase() }}</div>
         <div class="user-details">
           <div class="user-name">{{ user.username }}</div>
           <div class="user-role">{{ user.role }}</div>
         </div>
       </div>
-      <button class="btn-logout" (click)="logout()">
-        <span>
-          <svg width="19" height="19" viewBox="0 0 24 24">
-            <rect x="3" y="5" width="14" height="14" rx="3" fill="#fff"/>
-            <path d="M17 12h-8m8 0l-3-3m3 3l-3 3" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </span>
-        Logout
+
+      <!-- Logout Button -->
+      <button class="btn-logout" (click)="logout()" title="Logout">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2"/>
+          <polyline points="16 17 21 12 16 7" stroke="currentColor" stroke-width="2"/>
+          <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <span class="logout-text">Logout</span>
       </button>
     </div>
   </div>

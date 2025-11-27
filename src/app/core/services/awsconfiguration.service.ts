@@ -1,15 +1,8 @@
-// ============================================
-// aws-configuration.service.ts - COMPLETE UPDATED VERSION
-// ============================================
-
-import { Injectable, inject } from '@angular/core';
+// services/awsconfiguration.service.ts
+import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, of } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
-import { AuthService } from './auth.service';
-
-// ==================== INTERFACES ====================
+import { Observable, throwError } from 'rxjs';
+import { catchError, retry, tap } from 'rxjs/operators';
 
 export interface AWSConfiguration {
   id?: number;
@@ -34,7 +27,6 @@ export interface AWSConfiguration {
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
-  last_updated?: string;
 }
 
 export interface TestCredentialsResponse {
@@ -44,442 +36,245 @@ export interface TestCredentialsResponse {
   error?: string;
 }
 
-export interface ResourcesResponse {
+export interface AWSResourcesResponse {
   success: boolean;
   resources?: {
     vpcs?: any[];
     security_groups?: any[];
+    instances?: any[];
     subnets?: any[];
-    nacls?: any[];
-    waf_web_acls?: any[];
-    waf_ip_sets?: any[];
-    network_firewalls?: any[];
-    log_groups?: any[];
   };
   error?: string;
 }
 
-export interface SetActiveResponse {
-  success: boolean;
-  message: string;
-  configuration?: AWSConfiguration;
-}
-
-export interface AWSStatusConfig {
-  name: string;
-  region: string;
-  vpc_id?: string;
-  security_group_id?: string;
-  waf_configured: boolean;
-  nacl_configured: boolean;
-  firewall_configured: boolean;
-  last_updated: string;
-  auto_block_enabled: boolean;
-  auto_block_threshold: number;
-}
-
-export interface VPCInfo {
-  vpc_id: string;
-  cidr_block: string;
-  state: string;
-  subnets_count: number;
-  tags?: { [key: string]: string };
-}
-
-export interface SecurityGroupInfo {
-  group_id: string;
-  group_name: string;
-  description: string;
-  ingress_rules_count: number;
-  egress_rules_count: number;
-  vpc_id: string;
-}
-
 export interface AWSStatusResponse {
   configured: boolean;
-  connected?: boolean;
+  connected: boolean;
   message?: string;
   error?: string;
-  config?: AWSStatusConfig;
+  config?: {
+    id: number;
+    name: string;
+    region: string;
+    vpc_id?: string;
+    security_group_id?: string;
+    waf_configured?: boolean;
+    nacl_configured?: boolean;
+    firewall_configured?: boolean;
+    auto_block_enabled: boolean;
+    auto_block_threshold: number;
+    last_updated: string;
+  };
+  vpc_info?: {
+    cidr_block: string;
+    subnets_count: number;
+  };
+  security_group?: {
+    ingress_rules_count: number;
+    egress_rules_count: number;
+  };
   regions_available?: string[];
-  vpc_info?: VPCInfo;
-  security_group?: SecurityGroupInfo;
-  last_check?: string;
-  credentials_valid?: boolean;
 }
-
-export interface AWSStats {
-  total_requests: number;
-  successful_requests: number;
-  failed_requests: number;
-  last_request: string;
-}
-
-export interface ValidationResponse {
-  valid: boolean;
-  errors?: string[];
-}
-
-export interface ConnectionCheckResponse {
-  connected: boolean;
-  message: string;
-}
-
-// ==================== SERVICE ====================
 
 @Injectable({
   providedIn: 'root'
 })
 export class AWSConfigurationService {
-  private readonly http = inject(HttpClient);
-  private readonly authService = inject(AuthService);
-  
-  private readonly apiUrl = `${environment.apiUrl}/admin/aws-config`;
-  private readonly statusUrl = `${environment.apiUrl}/admin/aws-status`;
+  private readonly apiUrl = 'http://127.0.0.1:8000/api';
 
-  // ==================== CONFIGURATION CRUD ====================
+  constructor(private http: HttpClient) {}
 
   /**
-   * Récupère toutes les configurations AWS
-   * Note: Le token est automatiquement ajouté par l'intercepteur
+   * Get all AWS configurations
    */
   getConfigurations(): Observable<AWSConfiguration[]> {
-    console.log('🔍 Récupération des configurations AWS');
-    return this.http.get<AWSConfiguration[]>(this.apiUrl).pipe(
-      tap(configs => console.log(`✅ ${configs.length} configuration(s) récupérée(s)`)),
-      catchError(this.handleError('getConfigurations'))
+    const url = `${this.apiUrl}/admin/aws-config/`;
+    
+    console.log('📡 Fetching AWS configurations from:', url);
+    
+    return this.http.get<AWSConfiguration[]>(url).pipe(
+      tap(response => {
+        console.log('✅ AWS configurations received:', response);
+      }),
+      retry(1),
+      catchError(this.handleError)
     );
   }
 
   /**
-   * Récupère une configuration AWS spécifique
+   * Get single AWS configuration by ID
    */
   getConfiguration(id: number): Observable<AWSConfiguration> {
-    console.log(`🔍 Récupération de la configuration AWS #${id}`);
-    return this.http.get<AWSConfiguration>(`${this.apiUrl}/${id}/`).pipe(
-      tap(config => console.log(`✅ Configuration #${id} récupérée:`, config.name)),
-      catchError(this.handleError('getConfiguration'))
+    const url = `${this.apiUrl}/admin/aws-config/${id}/`;
+    
+    console.log('📡 Fetching AWS configuration:', id);
+    
+    return this.http.get<AWSConfiguration>(url).pipe(
+      tap(response => {
+        console.log('✅ AWS configuration received:', response);
+      }),
+      catchError(this.handleError)
     );
   }
 
   /**
-   * Récupère la configuration AWS active
+   * Create new AWS configuration
    */
-  getActiveConfiguration(): Observable<AWSConfiguration> {
-    console.log('🔍 Récupération de la configuration AWS active');
-    return this.http.get<AWSConfiguration>(`${this.apiUrl}/active/`).pipe(
-      tap(config => console.log(`✅ Configuration active:`, config.name)),
-      catchError(this.handleError('getActiveConfiguration'))
+  createConfiguration(config: Partial<AWSConfiguration>): Observable<AWSConfiguration> {
+    const url = `${this.apiUrl}/admin/aws-config/`;
+    
+    console.log('📡 Creating AWS configuration:', config);
+    
+    return this.http.post<AWSConfiguration>(url, config).pipe(
+      tap(response => {
+        console.log('✅ AWS configuration created:', response);
+      }),
+      catchError(this.handleError)
     );
   }
 
   /**
-   * Crée une nouvelle configuration AWS
-   */
-  createConfiguration(config: AWSConfiguration): Observable<AWSConfiguration> {
-    console.log('➕ Création d\'une nouvelle configuration AWS:', config.name);
-    return this.http.post<AWSConfiguration>(`${this.apiUrl}/`, config).pipe(
-      tap(newConfig => console.log(`✅ Configuration créée avec succès:`, newConfig.id)),
-      catchError(this.handleError('createConfiguration'))
-    );
-  }
-
-  /**
-   * Met à jour une configuration AWS existante
+   * Update existing AWS configuration
    */
   updateConfiguration(id: number, config: Partial<AWSConfiguration>): Observable<AWSConfiguration> {
-    console.log(`📝 Mise à jour de la configuration AWS #${id}`);
-    return this.http.patch<AWSConfiguration>(`${this.apiUrl}/${id}/`, config).pipe(
-      tap(updated => console.log(`✅ Configuration #${id} mise à jour`)),
-      catchError(this.handleError('updateConfiguration'))
+    const url = `${this.apiUrl}/admin/aws-config/${id}/`;
+    
+    console.log('📡 Updating AWS configuration:', id, config);
+    
+    // Remove empty/null values to avoid overwriting with empty data
+    const cleanConfig = Object.entries(config).reduce((acc, [key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as any);
+    
+    return this.http.patch<AWSConfiguration>(url, cleanConfig).pipe(
+      tap(response => {
+        console.log('✅ AWS configuration updated:', response);
+      }),
+      catchError(this.handleError)
     );
   }
 
   /**
-   * Supprime une configuration AWS
+   * Delete AWS configuration
    */
-  deleteConfiguration(id: number): Observable<void> {
-    console.log(`🗑️ Suppression de la configuration AWS #${id}`);
-    return this.http.delete<void>(`${this.apiUrl}/${id}/`).pipe(
-      tap(() => console.log(`✅ Configuration #${id} supprimée`)),
-      catchError(this.handleError('deleteConfiguration'))
+  deleteConfiguration(id: number): Observable<any> {
+    const url = `${this.apiUrl}/admin/aws-config/${id}/`;
+    
+    console.log('📡 Deleting AWS configuration:', id);
+    
+    return this.http.delete(url).pipe(
+      tap(() => {
+        console.log('✅ AWS configuration deleted:', id);
+      }),
+      catchError(this.handleError)
     );
   }
 
-  // ==================== CONFIGURATION ACTIONS ====================
-
   /**
-   * Teste les identifiants AWS d'une configuration
+   * Test AWS credentials for a configuration
    */
   testCredentials(id: number): Observable<TestCredentialsResponse> {
-    console.log(`🧪 Test des identifiants AWS pour la configuration #${id}`);
-    return this.http.post<TestCredentialsResponse>(
-      `${this.apiUrl}/${id}/test_credentials/`,
-      {}
-    ).pipe(
+    const url = `${this.apiUrl}/admin/aws-config/${id}/test_credentials/`;
+    
+    console.log('📡 Testing AWS credentials for config:', id);
+    
+    return this.http.post<TestCredentialsResponse>(url, {}).pipe(
       tap(response => {
-        if (response.success) {
-          console.log(`✅ Identifiants valides. Régions disponibles:`, response.regions?.length);
-        } else {
-          console.error(`❌ Identifiants invalides:`, response.error);
-        }
+        console.log('✅ Credentials test result:', response);
       }),
-      catchError(this.handleError('testCredentials'))
+      catchError(this.handleError)
     );
   }
 
   /**
-   * Récupère les ressources AWS disponibles pour une configuration
+   * Set configuration as active
    */
-  getResources(id: number): Observable<ResourcesResponse> {
-    console.log(`📦 Récupération des ressources AWS pour la configuration #${id}`);
-    return this.http.get<ResourcesResponse>(
-      `${this.apiUrl}/${id}/get_resources/`
-    ).pipe(
+  setActiveConfiguration(id: number): Observable<AWSConfiguration> {
+    const url = `${this.apiUrl}/admin/aws-config/${id}/set_active/`;
+    
+    console.log('📡 Setting active AWS configuration:', id);
+    
+    return this.http.post<AWSConfiguration>(url, {}).pipe(
       tap(response => {
-        if (response.success && response.resources) {
-          const resourceCount = Object.keys(response.resources).length;
-          console.log(`✅ ${resourceCount} type(s) de ressources récupéré(s)`);
-        }
+        console.log('✅ Active configuration set:', response);
       }),
-      catchError(this.handleError('getResources'))
+      catchError(this.handleError)
     );
   }
 
   /**
-   * Définit une configuration comme active
+   * Get AWS resources for a configuration
    */
-  setActiveConfiguration(id: number): Observable<SetActiveResponse> {
-    console.log(`🎯 Activation de la configuration AWS #${id}`);
-    return this.http.post<SetActiveResponse>(
-      `${this.apiUrl}/${id}/set_active/`,
-      {}
-    ).pipe(
+  getResources(id: number): Observable<AWSResourcesResponse> {
+    const url = `${this.apiUrl}/admin/aws-config/${id}/get_resources/`;
+    
+    console.log('📡 Fetching AWS resources for config:', id);
+    
+    return this.http.get<AWSResourcesResponse>(url).pipe(
       tap(response => {
-        if (response.success) {
-          console.log(`✅ Configuration #${id} activée avec succès`);
-        }
+        console.log('✅ AWS resources received:', response);
       }),
-      catchError(this.handleError('setActiveConfiguration'))
+      catchError(this.handleError)
     );
   }
 
-  // ==================== AWS STATUS ====================
+  /**
+   * Sync AWS resources
+   */
+  syncResources(id: number): Observable<any> {
+    const url = `${this.apiUrl}/admin/aws-config/${id}/sync_resources/`;
+    
+    console.log('📡 Syncing AWS resources for config:', id);
+    
+    return this.http.post(url, {}).pipe(
+      tap(response => {
+        console.log('✅ AWS resources synced:', response);
+      }),
+      catchError(this.handleError)
+    );
+  }
 
   /**
-   * Récupère le statut complet de la connexion AWS
+   * Get AWS Status (for dashboard and status monitoring)
    */
   getAWSStatus(): Observable<AWSStatusResponse> {
-    console.log('🔍 Vérification du statut AWS');
-    return this.http.get<AWSStatusResponse>(`${this.statusUrl}/`).pipe(
-      map(response => ({
-        ...response,
-        last_check: new Date().toISOString()
-      })),
-      tap(status => {
-        if (status.configured && status.connected) {
-          console.log('✅ AWS configuré et connecté');
-        } else if (status.configured) {
-          console.warn('⚠️ AWS configuré mais non connecté');
-        } else {
-          console.warn('⚠️ AWS non configuré');
-        }
+    const url = `${this.apiUrl}/admin/aws-status/`;
+    
+    console.log('📡 Fetching AWS status');
+    
+    return this.http.get<AWSStatusResponse>(url).pipe(
+      tap(response => {
+        console.log('✅ AWS status received:', response);
       }),
-      catchError(this.handleError('getAWSStatus'))
+      retry(1),
+      catchError(this.handleError)
     );
   }
 
   /**
-   * Force une vérification du statut AWS
+   * Refresh AWS Status (force check)
    */
   refreshAWSStatus(): Observable<AWSStatusResponse> {
-    console.log('🔄 Rafraîchissement du statut AWS');
-    return this.http.post<AWSStatusResponse>(
-      `${this.statusUrl}/refresh/`,
-      {}
-    ).pipe(
-      map(response => ({
-        ...response,
-        last_check: new Date().toISOString()
-      })),
-      tap(() => console.log('✅ Statut AWS rafraîchi')),
-      catchError(this.handleError('refreshAWSStatus'))
-    );
-  }
-
-  /**
-   * Vérifie la connectivité AWS
-   */
-  checkConnection(): Observable<ConnectionCheckResponse> {
-    console.log('🔌 Vérification de la connexion AWS');
-    return this.http.get<ConnectionCheckResponse>(
-      `${this.statusUrl}/check-connection/`
-    ).pipe(
-      tap(response => {
-        if (response.connected) {
-          console.log('✅ Connexion AWS établie');
-        } else {
-          console.warn('⚠️ Connexion AWS échouée:', response.message);
-        }
-      }),
-      catchError(this.handleError('checkConnection'))
-    );
-  }
-
-  // ==================== VALIDATION ====================
-
-  /**
-   * Valide une configuration AWS avant sauvegarde
-   */
-  validateConfiguration(config: Partial<AWSConfiguration>): Observable<ValidationResponse> {
-    console.log('✔️ Validation de la configuration AWS');
-    return this.http.post<ValidationResponse>(
-      `${this.apiUrl}/validate/`,
-      config
-    ).pipe(
-      tap(response => {
-        if (response.valid) {
-          console.log('✅ Configuration valide');
-        } else {
-          console.warn('⚠️ Configuration invalide:', response.errors);
-        }
-      }),
-      catchError(this.handleError('validateConfiguration'))
-    );
-  }
-
-  // ==================== UTILITIES ====================
-
-  /**
-   * Récupère la liste des régions AWS disponibles
-   */
-  getAvailableRegions(): Observable<string[]> {
-    console.log('🌍 Récupération des régions AWS disponibles');
-    return this.http.get<{ regions: string[] }>(
-      `${this.apiUrl}/regions/`
-    ).pipe(
-      map(response => response.regions),
-      tap(regions => console.log(`✅ ${regions.length} régions disponibles`)),
-      catchError(() => {
-        console.warn('⚠️ Échec de récupération des régions, utilisation des valeurs par défaut');
-        // Fallback vers des régions par défaut si l'endpoint échoue
-        const defaultRegions = [
-          'us-east-1', 'us-east-2', 'us-west-1', 'us-west-2',
-          'eu-west-1', 'eu-west-2', 'eu-west-3', 'eu-central-1', 'eu-north-1',
-          'ap-south-1', 'ap-northeast-1', 'ap-northeast-2', 'ap-northeast-3',
-          'ap-southeast-1', 'ap-southeast-2',
-          'ca-central-1', 'sa-east-1'
-        ];
-        return of(defaultRegions);
-      })
-    );
-  }
-
-  /**
-   * Récupère les statistiques d'utilisation AWS
-   */
-  getAWSStats(): Observable<AWSStats> {
-    console.log('📊 Récupération des statistiques AWS');
-    return this.http.get<AWSStats>(
-      `${this.statusUrl}/stats/`
-    ).pipe(
-      tap(stats => console.log(`✅ Stats: ${stats.total_requests} requêtes totales`)),
-      catchError(this.handleError('getAWSStats'))
-    );
-  }
-
-  // ==================== ERROR HANDLING ====================
-
-  /**
-   * Gestion centralisée des erreurs HTTP
-   */
-  private handleError(operation: string) {
-    return (error: HttpErrorResponse): Observable<never> => {
-      let errorMessage = 'Une erreur est survenue';
-      
-      if (error.error instanceof ErrorEvent) {
-        // Erreur côté client
-        errorMessage = `Erreur: ${error.error.message}`;
-        console.error(`❌ [${operation}] Erreur client:`, error.error.message);
-      } else {
-        // Erreur côté serveur
-        console.error(`❌ [${operation}] Erreur serveur:`, {
-          status: error.status,
-          message: error.message,
-          error: error.error
-        });
-
-        switch (error.status) {
-          case 0:
-            errorMessage = 'Impossible de contacter le serveur. Vérifiez votre connexion.';
-            break;
-          case 401:
-            errorMessage = 'Session expirée. Veuillez vous reconnecter.';
-            // L'intercepteur gère déjà la déconnexion
-            break;
-          case 403:
-            errorMessage = 'Accès non autorisé. Vous n\'avez pas les permissions nécessaires.';
-            break;
-          case 404:
-            errorMessage = 'Ressource non trouvée.';
-            break;
-          case 500:
-            errorMessage = 'Erreur serveur. Veuillez réessayer plus tard.';
-            break;
-          case 503:
-            errorMessage = 'Service temporairement indisponible.';
-            break;
-          default:
-            // Essayer d'extraire le message du backend
-            if (error.error?.message) {
-              errorMessage = error.error.message;
-            } else if (error.error?.error) {
-              errorMessage = error.error.error;
-            } else if (error.error?.detail) {
-              errorMessage = error.error.detail;
-            } else if (typeof error.error === 'string') {
-              errorMessage = error.error;
-            } else {
-              errorMessage = `Erreur ${error.status}: ${error.statusText}`;
-            }
-        }
-      }
-
-      console.error(`📋 [${operation}] Message d'erreur final:`, errorMessage);
-      return throwError(() => new Error(errorMessage));
-    };
-  }
-
-  // ==================== HELPER METHODS ====================
-
-  /**
-   * Vérifie si une configuration est complète
-   */
-  isConfigurationComplete(config: AWSConfiguration): boolean {
-    const isComplete = !!(
-      config.name &&
-      config.aws_access_key &&
-      config.aws_region &&
-      (config.vpc_id || config.security_group_id)
-    );
+    const url = `${this.apiUrl}/admin/aws-status/refresh/`;
     
-    if (!isComplete) {
-      console.warn('⚠️ Configuration incomplète:', {
-        hasName: !!config.name,
-        hasAccessKey: !!config.aws_access_key,
-        hasRegion: !!config.aws_region,
-        hasVpcOrSG: !!(config.vpc_id || config.security_group_id)
-      });
-    }
+    console.log('📡 Refreshing AWS status');
     
-    return isComplete;
+    return this.http.post<AWSStatusResponse>(url, {}).pipe(
+      tap(response => {
+        console.log('✅ AWS status refreshed:', response);
+      }),
+      catchError(this.handleError)
+    );
   }
 
   /**
-   * Récupère le nom de la région formaté
+   * Get region label from region code
    */
   getRegionLabel(regionCode: string): string {
-    const regionMap: { [key: string]: string } = {
+    const regions: { [key: string]: string } = {
       'us-east-1': 'US East (N. Virginia)',
       'us-east-2': 'US East (Ohio)',
       'us-west-1': 'US West (N. California)',
@@ -496,134 +291,87 @@ export class AWSConfigurationService {
       'ap-southeast-1': 'Asia Pacific (Singapore)',
       'ap-southeast-2': 'Asia Pacific (Sydney)',
       'ca-central-1': 'Canada (Central)',
-      'sa-east-1': 'South America (São Paulo)',
-      'me-south-1': 'Middle East (Bahrain)',
-      'af-south-1': 'Africa (Cape Town)'
+      'sa-east-1': 'South America (São Paulo)'
     };
-    return regionMap[regionCode] || regionCode;
+    return regions[regionCode] || regionCode;
   }
 
   /**
-   * Masque partiellement une clé d'accès pour l'affichage
+   * Error handler
    */
-  maskAccessKey(accessKey: string): string {
-    if (!accessKey || accessKey.length < 8) {
-      return '****';
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage = 'An error occurred';
+
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      errorMessage = `Error: ${error.error.message}`;
+      console.error('❌ Client-side error:', error.error.message);
+    } else {
+      // Server-side error
+      console.error(
+        `❌ Server error ${error.status}\n` +
+        `URL: ${error.url}\n` +
+        `Message: ${error.message}\n` +
+        `Body:`, error.error
+      );
+
+      switch (error.status) {
+        case 0:
+          errorMessage = 'Unable to connect to server. Check your connection.';
+          break;
+        case 400:
+          errorMessage = 'Bad request. Please check your input.';
+          if (error.error) {
+            // Try to extract field-specific errors
+            if (typeof error.error === 'object') {
+              const errors = Object.entries(error.error)
+                .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
+                .join('; ');
+              errorMessage = errors || errorMessage;
+            }
+          }
+          break;
+        case 401:
+          errorMessage = 'Unauthorized. Please login again.';
+          break;
+        case 403:
+          errorMessage = 'Access forbidden. You do not have permission.';
+          console.error('🔒 403 Error - Check:');
+          console.error('  - User must be authenticated');
+          console.error('  - User must have admin role');
+          console.error('  - JWT token is valid');
+          break;
+        case 404:
+          errorMessage = 'Configuration not found.';
+          break;
+        case 500:
+          errorMessage = 'Internal server error. Please try again later.';
+          break;
+        case 503:
+          errorMessage = 'Service unavailable. Please try again later.';
+          break;
+        default:
+          errorMessage = `Error ${error.status}: ${error.statusText}`;
+      }
+
+      // Extract error details from backend
+      if (error.error) {
+        if (typeof error.error === 'string') {
+          errorMessage = error.error;
+        } else if (error.error.detail) {
+          errorMessage = error.error.detail;
+        } else if (error.error.message) {
+          errorMessage = error.error.message;
+        } else if (error.error.error) {
+          errorMessage = error.error.error;
+        }
+      }
     }
-    const start = accessKey.substring(0, 4);
-    const end = accessKey.substring(accessKey.length - 4);
-    return `${start}****${end}`;
-  }
 
-  /**
-   * Masque une clé secrète pour l'affichage
-   */
-  maskSecretKey(secretKey: string): string {
-    if (!secretKey) {
-      return '****';
-    }
-    return '****************************************';
-  }
-
-  /**
-   * Vérifie si les identifiants sont temporaires (AWS Academy)
-   */
-  hasTemporaryCredentials(config: AWSConfiguration): boolean {
-    return !!(config.aws_session_token && config.aws_session_token.length > 0);
-  }
-
-  /**
-   * Formate une date ISO en format lisible
-   */
-  formatDate(isoDate: string): string {
-    if (!isoDate) return 'N/A';
-    
-    const date = new Date(isoDate);
-    return date.toLocaleString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
-
-  /**
-   * Calcule le temps écoulé depuis une date
-   */
-  getTimeAgo(isoDate: string): string {
-    if (!isoDate) return 'Jamais';
-    
-    const date = new Date(isoDate);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return 'À l\'instant';
-    if (diffMins < 60) return `Il y a ${diffMins} minute${diffMins > 1 ? 's' : ''}`;
-    if (diffHours < 24) return `Il y a ${diffHours} heure${diffHours > 1 ? 's' : ''}`;
-    if (diffDays < 7) return `Il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
-    
-    return this.formatDate(isoDate);
-  }
-
-  /**
-   * Récupère le statut de connexion sous forme de texte
-   */
-  getConnectionStatusText(status: AWSStatusResponse): string {
-    if (!status.configured) {
-      return 'Non configuré';
-    }
-    if (!status.connected) {
-      return 'Configuré mais non connecté';
-    }
-    if (!status.credentials_valid) {
-      return 'Identifiants invalides';
-    }
-    return 'Connecté';
-  }
-
-  /**
-   * Récupère la classe CSS pour le statut
-   */
-  getConnectionStatusClass(status: AWSStatusResponse): string {
-    if (!status.configured) {
-      return 'status-warning';
-    }
-    if (!status.connected || !status.credentials_valid) {
-      return 'status-danger';
-    }
-    return 'status-success';
-  }
-
-  /**
-   * Valide un format de clé d'accès AWS
-   */
-  isValidAccessKeyFormat(accessKey: string): boolean {
-    // Format typique: AKIA suivi de 16 caractères alphanumériques
-    const accessKeyPattern = /^AKIA[0-9A-Z]{16}$/;
-    return accessKeyPattern.test(accessKey);
-  }
-
-  /**
-   * Valide un format de région AWS
-   */
-  isValidRegionFormat(region: string): boolean {
-    const regionPattern = /^[a-z]{2}-[a-z]+-\d{1}$/;
-    return regionPattern.test(region);
-  }
-
-  /**
-   * Nettoie les données sensibles d'une configuration pour l'affichage
-   */
-  sanitizeConfigForDisplay(config: AWSConfiguration): AWSConfiguration {
-    return {
-      ...config,
-      aws_access_key: this.maskAccessKey(config.aws_access_key),
-      aws_secret_key: config.aws_secret_key ? this.maskSecretKey(config.aws_secret_key) : undefined,
-      aws_session_token: config.aws_session_token ? '****' : undefined
-    };
+    return throwError(() => ({
+      message: errorMessage,
+      status: error.status,
+      error: error.error
+    }));
   }
 }

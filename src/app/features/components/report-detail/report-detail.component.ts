@@ -204,7 +204,7 @@ export class ReportDetailComponent implements OnInit {
   navigateToCreateMitigation(): void {
     if (!this.report) return;
     
-    this.router.navigate(['/mitigations/create'], {
+    this.router.navigate(['/mitigations'], {
       queryParams: {
         reportId: this.report.id
       }

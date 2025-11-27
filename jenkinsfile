@@ -1,69 +1,104 @@
 pipeline {
     agent any
 
-    environment {
-        SONAR_TOKEN = credentials('SONAR_TOKEN') // Configure ce secret dans Jenkins
+   environment {
+        VENV = "${WORKSPACE}/venv"
+        SONAR_TOKEN = credentials('SONAR_TOKEN')
+        SONAR_HOST_URL = 'http://host.docker.internal:9000'
+        DOCKER_IMAGE = 'mohamedbelhaj/djangoproject'
+        DOCKER_TAG = "${BUILD_NUMBER}"
+        DOCKER_HOST = 'tcp://host.docker.internal:2375'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
     }
-
     stages {
+
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/mohamedbelhaaj/pipline.git', branch: 'main'
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo "Installing Node dependencies..."
+                sh 'npm install'
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                echo "Running Angular Unit Tests..."
+                sh 'npm test -- --watch=false'
             }
         }
 
         stage('SonarQube Analysis') {
-            parallel {
-                stage('Angular') {
-                    steps {
-                        dir('angular') {
-                            withSonarQubeEnv('SonarQube') {
-                                sh "sonar-scanner -Dsonar.projectKey=angular_app -Dsonar.sources=src -Dsonar.login=$SONAR_TOKEN"
-                            }
-                        }
-                    }
-                }
-                stage('Django') {
-                    steps {
-                        dir('django') {
-                            withSonarQubeEnv('SonarQube') {
-                                sh "sonar-scanner -Dsonar.projectKey=django_app -Dsonar.sources=. -Dsonar.login=$SONAR_TOKEN"
-                            }
-                        }
+            steps {
+                script {
+                    withSonarQubeEnv("${SONARQUBE_ENV}") {
+                        sh """
+                           npx sonar-scanner \
+                           -Dsonar.projectKey=threat-analysis-app \
+                           -Dsonar.sources=src \
+                           -Dsonar.host.url=\${SONAR_HOST_URL} \
+                           -Dsonar.login=\${SONAR_AUTH_TOKEN}
+                        """
                     }
                 }
             }
         }
 
-        stage('Build Docker Images') {
+        stage("Quality Gate") {
             steps {
-                sh 'docker-compose build'
-            }
-        }
-
-        stage('Test Angular') {
-            steps {
-                dir('angular') {
-                    sh 'npm install'
-                    sh 'npm run test -- --watch=false'
+                timeout(time: 3, unit: 'MINUTES') {
+                    script {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "Échec du Quality Gate : ${qg.status}"
+                        }
+                    }
                 }
             }
         }
 
-        stage('Test Django') {
+        stage('Build Angular App') {
             steps {
-                dir('django') {
-                    sh 'pip install -r requirements.txt'
-                    sh 'python manage.py test'
-                }
+                echo "Building Angular in production mode..."
+                sh 'npm run build --prod'
             }
         }
 
-        stage('Deploy') {
+        stage('Build Docker Image') {
             steps {
-                sh 'docker-compose down'
-                sh 'docker-compose up -d'
+                echo "Building Docker image..."
+                sh """
+                    docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+                """
             }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    echo "Pushing Docker image to registry..."
+                    withCredentials([usernamePassword(credentialsId: 'docker-registry-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                        sh """
+                            echo $PASS | docker login $REGISTRY -u $USER --password-stdin
+                            docker tag $DOCKER_IMAGE:$DOCKER_TAG $REGISTRY/$DOCKER_IMAGE:$DOCKER_TAG
+                            docker push $REGISTRY/$DOCKER_IMAGE:$DOCKER_TAG
+                        """
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline terminé avec succès 🎉"
+        }
+        failure {
+            echo "La pipeline a échoué ❌"
         }
     }
 }

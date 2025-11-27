@@ -67,7 +67,7 @@ export interface AWSConfiguration {
   providedIn: 'root'
 })
 export class DashboardService {
-   private readonly apiUrl = 'http://127.0.0.1:8000/api/admin/dashboard';
+   private readonly apiUrl = 'http://127.0.0.1:8000/api';
 
  constructor(private http: HttpClient) {}
 

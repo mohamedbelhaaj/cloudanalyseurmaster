@@ -1,19 +1,51 @@
-import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-navbar-admin',
-  imports: [],
+  standalone:true,
+  imports: [ RouterModule,CommonModule],
   templateUrl: './navbar-admin.component.html',
   styleUrl: './navbar-admin.component.scss'
 })
-export class NavbarAdminComponent {
-  private authService = inject(AuthService);
-  
-  currentUser$ = this.authService.currentUser$;
+export class NavbarAdminComponent implements OnInit {
+  currentUser$: Observable<any>;
+  hasNotifications = false;
+  notificationCount = 0;
 
-  logout(): void {
-    this.authService.logout().subscribe();
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {
+    this.currentUser$ = this.authService.currentUser$;
   }
 
+  ngOnInit(): void {
+    // Charger les notifications si nécessaire
+    this.loadNotifications();
+  }
+
+  loadNotifications(): void {
+    // TODO: Implémenter la logique de chargement des notifications
+    // this.notificationService.getUnreadCount().subscribe(count => {
+    //   this.notificationCount = count;
+    //   this.hasNotifications = count > 0;
+    // });
+  }
+
+  logout(): void {
+    this.authService.logout().subscribe({
+      next: () => {
+        this.router.navigate(['/login']);
+      },
+      error: (error) => {
+        console.error('Logout error:', error);
+        // Même en cas d'erreur, rediriger vers login
+        this.router.navigate(['/login']);
+      }
+    });
+  }
 }

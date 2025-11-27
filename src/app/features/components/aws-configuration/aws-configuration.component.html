@@ -8,6 +8,17 @@
     </button>
   </div>
 
+  <!-- Global Messages -->
+  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="fas fa-exclamation-circle me-2"></i>{{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fas fa-check-circle me-2"></i>{{ successMessage }}
+    <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
+  </div>
+
   <!-- Loading Spinner -->
   <div *ngIf="loading && !showForm" class="text-center py-5">
     <div class="spinner-border text-primary" role="status">
@@ -25,7 +36,7 @@
     </div>
 
     <div class="col-md-6 col-lg-4 mb-4" *ngFor="let config of configurations">
-      <div class="card h-100" [class.border-primary]="config.is_active">
+      <div class="card h-100" [class.border-primary]="config.is_active" [class.border-2]="config.is_active">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">
             {{ config.name }}
@@ -52,6 +63,11 @@
                   <i class="fas fa-server me-2"></i>View Resources
                 </a>
               </li>
+              <li>
+                <a class="dropdown-item" (click)="syncResources(config.id!)">
+                  <i class="fas fa-sync me-2"></i>Sync Resources
+                </a>
+              </li>
               <li *ngIf="!config.is_active">
                 <a class="dropdown-item" (click)="setActiveConfiguration(config.id!)">
                   <i class="fas fa-star me-2"></i>Set as Active
@@ -68,33 +84,31 @@
         </div>
         <div class="card-body">
           <div class="mb-3">
-            <small class="text-muted">Region</small>
-            <p class="mb-0"><strong>{{ config.aws_region }}</strong></p>
+            <small class="text-muted d-block">Region</small>
+            <strong>{{ config.aws_region }}</strong>
           </div>
           <div class="mb-3">
-            <small class="text-muted">Access Key</small>
-            <p class="mb-0 font-monospace">{{ config.aws_access_key }}</p>
+            <small class="text-muted d-block">Access Key</small>
+            <code class="text-truncate d-block">{{ config.aws_access_key }}</code>
           </div>
           <div class="mb-3" *ngIf="config.vpc_id">
-            <small class="text-muted">VPC ID</small>
-            <p class="mb-0 font-monospace">{{ config.vpc_id }}</p>
+            <small class="text-muted d-block">VPC ID</small>
+            <code>{{ config.vpc_id }}</code>
           </div>
           <div class="mb-3" *ngIf="config.security_group_id">
-            <small class="text-muted">Security Group</small>
-            <p class="mb-0 font-monospace">{{ config.security_group_id }}</p>
+            <small class="text-muted d-block">Security Group</small>
+            <code>{{ config.security_group_id }}</code>
           </div>
           <div class="mb-3">
-            <small class="text-muted">Auto Block</small>
-            <p class="mb-0">
-              <span *ngIf="config.auto_block_enabled" class="badge bg-success">
-                Enabled (Threshold: {{ config.auto_block_threshold }})
-              </span>
-              <span *ngIf="!config.auto_block_enabled" class="badge bg-secondary">Disabled</span>
-            </p>
+            <small class="text-muted d-block">Auto Block</small>
+            <span *ngIf="config.auto_block_enabled" class="badge bg-success">
+              Enabled (Threshold: {{ config.auto_block_threshold }})
+            </span>
+            <span *ngIf="!config.auto_block_enabled" class="badge bg-secondary">Disabled</span>
           </div>
           <div>
-            <small class="text-muted">Created</small>
-            <p class="mb-0">{{ config.created_at | date:'short' }}</p>
+            <small class="text-muted d-block">Created</small>
+            <span>{{ config.created_at | date:'short' }}</span>
           </div>
         </div>
       </div>
@@ -117,20 +131,25 @@
           <div class="col-md-6 mb-3">
             <label class="form-label">Configuration Name *</label>
             <input type="text" class="form-control" formControlName="name" 
+                   [class.is-invalid]="hasError('name')"
                    placeholder="Production AWS">
-            <div class="invalid-feedback d-block" 
-                 *ngIf="configForm.get('name')?.invalid && configForm.get('name')?.touched">
-              Configuration name is required
+            <div class="invalid-feedback" *ngIf="hasError('name')">
+              {{ getErrorMessage('name') }}
             </div>
+            <small class="form-text text-muted">A descriptive name for this configuration</small>
           </div>
 
           <div class="col-md-6 mb-3">
             <label class="form-label">AWS Region *</label>
-            <select class="form-select" formControlName="aws_region">
+            <select class="form-select" formControlName="aws_region" 
+                    [class.is-invalid]="hasError('aws_region')">
               <option *ngFor="let region of awsRegions" [value]="region.value">
                 {{ region.label }}
               </option>
             </select>
+            <div class="invalid-feedback" *ngIf="hasError('aws_region')">
+              {{ getErrorMessage('aws_region') }}
+            </div>
           </div>
         </div>
 
@@ -142,11 +161,11 @@
 
           <div class="col-md-6 mb-3">
             <label class="form-label">AWS Access Key *</label>
-            <input type="text" class="form-control" formControlName="aws_access_key" 
+            <input type="text" class="form-control font-monospace" formControlName="aws_access_key" 
+                   [class.is-invalid]="hasError('aws_access_key')"
                    placeholder="AKIAIOSFODNN7EXAMPLE">
-            <div class="invalid-feedback d-block" 
-                 *ngIf="configForm.get('aws_access_key')?.invalid && configForm.get('aws_access_key')?.touched">
-              AWS Access Key is required
+            <div class="invalid-feedback" *ngIf="hasError('aws_access_key')">
+              {{ getErrorMessage('aws_access_key') }}
             </div>
           </div>
 
@@ -154,19 +173,19 @@
             <label class="form-label">
               AWS Secret Key {{ isEditing ? '(Leave blank to keep current)' : '*' }}
             </label>
-            <input type="password" class="form-control" formControlName="aws_secret_key" 
+            <input type="password" class="form-control font-monospace" formControlName="aws_secret_key" 
+                   [class.is-invalid]="hasError('aws_secret_key')"
                    placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY">
-            <div class="invalid-feedback d-block" 
-                 *ngIf="!isEditing && configForm.get('aws_secret_key')?.invalid && configForm.get('aws_secret_key')?.touched">
-              AWS Secret Key is required
+            <div class="invalid-feedback" *ngIf="hasError('aws_secret_key')">
+              {{ getErrorMessage('aws_secret_key') }}
             </div>
           </div>
 
           <div class="col-12 mb-3">
             <label class="form-label">AWS Session Token (Optional - for AWS Academy)</label>
-            <textarea class="form-control" formControlName="aws_session_token" 
+            <textarea class="form-control font-monospace" formControlName="aws_session_token" 
                       rows="3" placeholder="Session token for temporary credentials"></textarea>
-            <small class="text-muted">Required for AWS Academy or temporary credentials</small>
+            <small class="form-text text-muted">Required for AWS Academy or temporary credentials</small>
           </div>
         </div>
 
@@ -178,30 +197,46 @@
 
           <div class="col-md-6 mb-3">
             <label class="form-label">VPC ID</label>
-            <input type="text" class="form-control" formControlName="vpc_id" 
+            <input type="text" class="form-control font-monospace" formControlName="vpc_id" 
+                   [class.is-invalid]="hasError('vpc_id')"
                    placeholder="vpc-xxxxxxxxx">
-            <small class="text-muted">Required for NACL blocking</small>
+            <div class="invalid-feedback" *ngIf="hasError('vpc_id')">
+              {{ getErrorMessage('vpc_id') }}
+            </div>
+            <small class="form-text text-muted">Required for NACL blocking</small>
           </div>
 
           <div class="col-md-6 mb-3">
             <label class="form-label">Security Group ID</label>
-            <input type="text" class="form-control" formControlName="security_group_id" 
+            <input type="text" class="form-control font-monospace" formControlName="security_group_id" 
+                   [class.is-invalid]="hasError('security_group_id')"
                    placeholder="sg-xxxxxxxxx">
-            <small class="text-muted">Default security group for blocking</small>
+            <div class="invalid-feedback" *ngIf="hasError('security_group_id')">
+              {{ getErrorMessage('security_group_id') }}
+            </div>
+            <small class="form-text text-muted">Default security group for blocking</small>
           </div>
 
           <div class="col-md-6 mb-3">
             <label class="form-label">Isolation Security Group ID</label>
-            <input type="text" class="form-control" formControlName="isolation_sg_id" 
+            <input type="text" class="form-control font-monospace" formControlName="isolation_sg_id" 
+                   [class.is-invalid]="hasError('isolation_sg_id')"
                    placeholder="sg-xxxxxxxxx">
-            <small class="text-muted">Quarantine security group</small>
+            <div class="invalid-feedback" *ngIf="hasError('isolation_sg_id')">
+              {{ getErrorMessage('isolation_sg_id') }}
+            </div>
+            <small class="form-text text-muted">Quarantine security group</small>
           </div>
 
           <div class="col-md-6 mb-3">
             <label class="form-label">Network ACL ID</label>
-            <input type="text" class="form-control" formControlName="nacl_id" 
+            <input type="text" class="form-control font-monospace" formControlName="nacl_id" 
+                   [class.is-invalid]="hasError('nacl_id')"
                    placeholder="acl-xxxxxxxxx">
-            <small class="text-muted">Network ACL for IP blocking</small>
+            <div class="invalid-feedback" *ngIf="hasError('nacl_id')">
+              {{ getErrorMessage('nacl_id') }}
+            </div>
+            <small class="form-text text-muted">Network ACL for IP blocking</small>
           </div>
         </div>
 
@@ -219,7 +254,7 @@
 
           <div class="col-md-6 mb-3">
             <label class="form-label">WAF Web ACL ID</label>
-            <input type="text" class="form-control" formControlName="waf_web_acl_id" 
+            <input type="text" class="form-control font-monospace" formControlName="waf_web_acl_id" 
                    placeholder="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
           </div>
 
@@ -231,7 +266,7 @@
 
           <div class="col-md-6 mb-3">
             <label class="form-label">WAF IP Set ID</label>
-            <input type="text" class="form-control" formControlName="waf_ip_set_id" 
+            <input type="text" class="form-control font-monospace" formControlName="waf_ip_set_id" 
                    placeholder="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
           </div>
         </div>
@@ -244,13 +279,13 @@
 
           <div class="col-md-6 mb-3">
             <label class="form-label">Network Firewall ARN</label>
-            <input type="text" class="form-control" formControlName="network_firewall_arn" 
+            <input type="text" class="form-control font-monospace" formControlName="network_firewall_arn" 
                    placeholder="arn:aws:network-firewall:...">
           </div>
 
           <div class="col-md-6 mb-3">
             <label class="form-label">CloudWatch Log Group Name</label>
-            <input type="text" class="form-control" formControlName="log_group_name" 
+            <input type="text" class="form-control font-monospace" formControlName="log_group_name" 
                    placeholder="/aws/network-firewall/logs">
           </div>
         </div>
@@ -262,48 +297,56 @@
           </div>
 
           <div class="col-md-6 mb-3">
-            <div class="form-check">
+            <div class="form-check form-switch">
               <input class="form-check-input" type="checkbox" 
                      formControlName="auto_block_enabled" id="autoBlockEnabled">
               <label class="form-check-label" for="autoBlockEnabled">
-                Enable Auto Block
+                <strong>Enable Auto Block</strong>
               </label>
             </div>
-            <small class="text-muted">Automatically block IPs when threshold is reached</small>
+            <small class="form-text text-muted">Automatically block IPs when threshold is reached</small>
           </div>
 
           <div class="col-md-6 mb-3">
             <label class="form-label">Auto Block Threshold</label>
             <input type="number" class="form-control" formControlName="auto_block_threshold" 
+                   [class.is-invalid]="hasError('auto_block_threshold')"
                    min="1" max="50">
-            <small class="text-muted">Number of incidents before auto-blocking (1-50)</small>
+            <div class="invalid-feedback" *ngIf="hasError('auto_block_threshold')">
+              {{ getErrorMessage('auto_block_threshold') }}
+            </div>
+            <small class="form-text text-muted">Number of incidents before auto-blocking (1-50)</small>
           </div>
 
           <div class="col-md-6 mb-3">
-            <div class="form-check">
+            <div class="form-check form-switch">
               <input class="form-check-input" type="checkbox" 
                      formControlName="is_active" id="isActive">
               <label class="form-check-label" for="isActive">
-                Set as Active Configuration
+                <strong>Set as Active Configuration</strong>
               </label>
             </div>
+            <small class="form-text text-muted">Only one configuration can be active at a time</small>
           </div>
         </div>
 
         <!-- Credential Test Result -->
-        <div *ngIf="credentialTestResult" class="alert" 
+        <div *ngIf="credentialTestResult" class="alert mb-4" 
              [class.alert-success]="credentialTestResult.success"
              [class.alert-danger]="!credentialTestResult.success">
-          <i class="fas" 
-             [class.fa-check-circle]="credentialTestResult.success"
-             [class.fa-exclamation-circle]="!credentialTestResult.success"></i>
-          {{ credentialTestResult.message || credentialTestResult.error }}
+          <h6 class="alert-heading">
+            <i class="fas" 
+               [class.fa-check-circle]="credentialTestResult.success"
+               [class.fa-exclamation-circle]="!credentialTestResult.success"></i>
+            Credential Test Result
+          </h6>
+          <p class="mb-0">{{ credentialTestResult.message || credentialTestResult.error }}</p>
           
           <div *ngIf="credentialTestResult.regions && credentialTestResult.regions.length > 0" 
-               class="mt-2">
+               class="mt-3">
             <strong>Available Regions:</strong>
-            <div class="mt-1">
-              <span class="badge bg-secondary me-1" *ngFor="let region of credentialTestResult.regions">
+            <div class="mt-2">
+              <span class="badge bg-secondary me-1 mb-1" *ngFor="let region of credentialTestResult.regions">
                 {{ region }}
               </span>
             </div>
@@ -311,10 +354,10 @@
         </div>
 
         <!-- Form Actions -->
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
           <button type="button" class="btn btn-secondary" (click)="closeForm()" 
                   [disabled]="loading">
-            Cancel
+            <i class="fas fa-times me-2"></i>Cancel
           </button>
           
           <div>
