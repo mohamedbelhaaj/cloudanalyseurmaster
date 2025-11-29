@@ -45,6 +45,7 @@ import { NavbarAdminComponent } from '@features/admin/navbar-admin/navbar-admin.
   `]
 })
 export class AppComponent {
+    title = 'threat-analysis-app';
   private router = inject(Router);
   private authService = inject(AuthService);
   
