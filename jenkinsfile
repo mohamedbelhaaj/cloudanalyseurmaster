@@ -2,9 +2,14 @@ pipeline {
     agent any
 
     environment {
+        SONAR_TOKEN = credentials('SONAR-TOKEN1')
         SONAR_HOST_URL = 'http://host.docker.internal:9000'
         DOCKER_IMAGE = 'mohamedbelhaj/angular'
         DOCKER_TAG = "${BUILD_NUMBER}"
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        DOCKER_HOST = 'tcp://host.docker.internal:2375'
+
+
     }
 
     stages {
