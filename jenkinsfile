@@ -65,10 +65,10 @@ pipeline {
                             
                             echo "===== Running SonarScanner ====="
                             sonar-scanner \
-                                -Dsonar.projectKey=angular-app \
+                                -Dsonar.projectKey=angular \
                                 -Dsonar.sources=src \
                                 -Dsonar.host.url=http://host.docker.internal:9000 \
-                                -Dsonar.token="${SONAR_TOKEN}" \
+                                -Dsonar.token="${SONAR-TOKEN}" \
                                 -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/*.spec.ts,**/*.test.ts \
                                 -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info \
                                 -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
