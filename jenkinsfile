@@ -42,7 +42,7 @@ pipeline {
                         sh """
                             npx sonar-scanner \
                             -Dsonar.projectKey=angular-app \
-                            -Dsonar.projectName=Angular-Cloud-Analyser \
+                            -Dsonar.projectName=angular-app \
                             -Dsonar.sources=src \
                             -Dsonar.exclusions=**/*.spec.ts,**/node_modules/**,**/dist/** \
                             -Dsonar.host.url=${SONAR_HOST_URL} \
