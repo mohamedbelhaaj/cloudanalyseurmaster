@@ -23,7 +23,6 @@ COPY --from=build /app/dist/threat-analysis-app/browser /usr/share/nginx/html
 
 # Copier la configuration nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
 # Exposer le port
 EXPOSE 80
 
