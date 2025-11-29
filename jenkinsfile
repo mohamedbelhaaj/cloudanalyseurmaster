@@ -23,19 +23,23 @@ pipeline {
             steps {
                 script {
                     try {
-                        sh '''
-                            echo "===== Testing SonarQube connection ====="
-                            if curl -s -f http://host.docker.internal:9000/api/system/status > /dev/null 2>&1; then
-                                echo "✅ SonarQube is available"
-                                exit 0
-                            else
-                                echo "⚠️ SonarQube is not available"
-                                exit 1
-                            fi
-                        '''
-                        env.SONAR_AVAILABLE = 'true'
+                        def result = sh(
+                            script: '''
+                                echo "===== Testing SonarQube connection ====="
+                                curl -s -f http://host.docker.internal:9000/api/system/status > /dev/null 2>&1
+                            ''',
+                            returnStatus: true
+                        )
+                        
+                        if (result == 0) {
+                            echo "✅ SonarQube is available"
+                            env.SONAR_AVAILABLE = 'true'
+                        } else {
+                            echo "⚠️ SonarQube is not available"
+                            env.SONAR_AVAILABLE = 'false'
+                        }
                     } catch (Exception e) {
-                        echo "⚠️ SonarQube non disponible, skip analysis"
+                        echo "⚠️ SonarQube non disponible, skip analysis: ${e.message}"
                         env.SONAR_AVAILABLE = 'false'
                     }
                 }
@@ -49,7 +53,7 @@ pipeline {
             steps {
                 script {
                     def scannerHome = tool 'SonarScanner'
-                    withCredentials([string(credentialsId: 'sonarscanner', variable: 'sonarscanner')]) {
+                    withCredentials([string(credentialsId: 'sonarscanner', variable: 'SONAR_TOKEN')]) {
                         sh """
                             echo "===== Running SonarScanner for Angular ====="
                             ${scannerHome}/bin/sonar-scanner \
@@ -57,7 +61,7 @@ pipeline {
                                 -Dsonar.projectName=angular-app \
                                 -Dsonar.sources=src \
                                 -Dsonar.host.url=http://host.docker.internal:9000 \
-                                -Dsonar.token=\${sonarscanner} \
+                                -Dsonar.token=\${SONAR_TOKEN} \
                                 -Dsonar.exclusions=**/*.spec.ts,**/node_modules/**,**/dist/**,**/*.test.ts \
                                 -Dsonar.sourceEncoding=UTF-8 \
                                 -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
@@ -67,12 +71,15 @@ pipeline {
                 }
             }
         }
-stage('Quality Gate') {
+
+        stage('Quality Gate') {
             when {
-                expression { return currentBuild.currentResult == 'SUCCESS' }
+                expression { env.SONAR_AVAILABLE == 'true' }
             }
             steps {
-                echo "Quality Gate stage skipped for simplicity."
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: false
+                }
             }
         }
 
