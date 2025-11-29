@@ -8,7 +8,9 @@
     "watch": "ng build --watch --configuration development",
     "build:prod": "ng build --configuration production",
     "build:docker": "ng build --configuration production --optimization=true --output-hashing=all",
-    "test": "ng test"
+    "test": "ng test",
+    "lint": "ng lint"
+
   },
   "prettier": {
     "printWidth": 100,
