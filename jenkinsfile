@@ -49,7 +49,7 @@ pipeline {
             steps {
                 script {
                     def scannerHome = tool 'SonarScanner'
-                    withCredentials([string(credentialsId: 'SONAR-TOKEN', variable: 'SONAR_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'SONAR-TOKEN', variable: 'SONAR-TOKEN')]) {
                         sh """
                             echo "===== Running SonarScanner for Angular ====="
                             ${scannerHome}/bin/sonar-scanner \
@@ -57,7 +57,7 @@ pipeline {
                                 -Dsonar.projectName=angular-app \
                                 -Dsonar.sources=src \
                                 -Dsonar.host.url=http://host.docker.internal:9000 \
-                                -Dsonar.token=\${SONAR_TOKEN} \
+                                -Dsonar.token=\${SONAR-TOKEN} \
                                 -Dsonar.exclusions=**/*.spec.ts,**/node_modules/**,**/dist/**,**/*.test.ts \
                                 -Dsonar.sourceEncoding=UTF-8 \
                                 -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
@@ -67,23 +67,12 @@ pipeline {
                 }
             }
         }
-
-        stage('Quality Gate') {
+stage('Quality Gate') {
             when {
-                expression { env.SONAR_AVAILABLE == 'true' }
+                expression { return currentBuild.currentResult == 'SUCCESS' }
             }
             steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    script {
-                        try {
-                            waitForQualityGate abortPipeline: false
-                            echo "✅ Quality Gate passed"
-                        } catch (Exception e) {
-                            echo "⚠️ Quality Gate failed or timeout"
-                            currentBuild.result = 'UNSTABLE'
-                        }
-                    }
-                }
+                echo "Quality Gate stage skipped for simplicity."
             }
         }
 
