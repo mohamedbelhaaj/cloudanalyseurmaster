@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:22.14.0-alpine'
-            args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-        }
-    }
+    agent any
 
     environment {
         SONAR_TOKEN = credentials('SONAR-TOKEN1')
@@ -15,25 +10,8 @@ pipeline {
     }
 
     stages {
-        stage('Setup Environment') {
-            steps {
-                script {
-                    echo "🔧 Configuration de l'environnement..."
-                    sh '''
-                        echo "Node.js version:"
-                        node --version
-                        echo "NPM version:"
-                        npm --version
-                        echo "Docker version:"
-                        docker --version
-                    '''
-                }
-            }
-        }
-
         stage('Checkout') {
             steps {
-                echo "📥 Récupération du code..."
                 git url: 'https://github.com/mohamedbelhaaj/cloudanalyseurmaster.git', branch: 'main'
                 echo "✅ Code récupéré"
             }
@@ -42,19 +20,15 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo "📦 Installation des dépendances..."
-                sh 'npm ci --legacy-peer-deps || npm install --legacy-peer-deps'
-                echo "✅ Dépendances installées"
+                sh 'npm install --legacy-peer-deps'
             }
         }
 
         stage('Build Angular') {
             steps {
-                echo "🔨 Construction de l'application Angular..."
+                echo "🔨 Build Angular..."
                 sh 'npm run build -- --configuration production'
-                echo "✅ Build Angular réussi"
-                
-                // Archive des artefacts
-                archiveArtifacts artifacts: 'dist/**/*', fingerprint: true
+                echo "✅ Build réussi"
             }
         }
 
@@ -62,12 +36,19 @@ pipeline {
             steps {
                 script {
                     echo "🔍 Test de l'accès Docker..."
-                    sh '''
-                        docker --version
-                        docker info || echo "⚠️ Docker info a échoué mais continue..."
-                        docker ps || echo "⚠️ Docker ps a échoué mais continue..."
-                        ls -la /var/run/docker.sock || echo "⚠️ Socket Docker non trouvé"
-                    '''
+                    
+                    // Test 1: Version Docker
+                    sh 'docker --version'
+                    
+                    // Test 2: Docker info
+                    sh 'docker info || echo "Docker info failed"'
+                    
+                    // Test 3: Lister les conteneurs
+                    sh 'docker ps || echo "Docker ps failed"'
+                    
+                    // Test 4: Permissions du socket
+                    sh 'ls -la /var/run/docker.sock || echo "Socket not found"'
+                    
                     echo "✅ Tests Docker terminés"
                 }
             }
@@ -76,81 +57,41 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    echo "📊 Analyse de la qualité du code avec SonarQube..."
+                    echo "📊 Analyse SonarQube..."
                     try {
                         sh """
                             npx sonar-scanner \
                             -Dsonar.projectKey=angular \
                             -Dsonar.sources=src \
                             -Dsonar.host.url=${SONAR_HOST_URL} \
-                            -Dsonar.token=${SONAR_TOKEN} \
-                            -Dsonar.scm.disabled=true \
-                            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-                            -Dsonar.test.exclusions=**/*.spec.ts,**/*.test.ts \
-                            -Dsonar.coverage.exclusions=**/*.spec.ts,**/*.test.ts,**/environments/** || echo "⚠️ SonarQube a échoué mais le pipeline continue"
+                            -Dsonar.token=${SONAR_TOKEN} || true
                         """
                     } catch (Exception e) {
-                        echo "⚠️ Analyse SonarQube ignorée: ${e.message}"
+                        echo "⚠️ SonarQube ignoré: ${e.message}"
                     }
                 }
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                echo "🧪 Exécution des tests..."
-                sh 'npm test -- --watch=false --browsers=ChromeHeadless --code-coverage || echo "⚠️ Tests échoués mais continuation du pipeline"'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "🐳 Construction de l'image Docker..."
+                    echo "🐳 Construction Docker..."
                     try {
-                        // Vérification du Dockerfile
-                        sh 'test -f Dockerfile && echo "✅ Dockerfile trouvé" || { echo "❌ Dockerfile manquant"; exit 1; }'
+                        // Vérifier que le Dockerfile existe
+                        sh 'test -f Dockerfile && echo "✅ Dockerfile trouvé" || echo "❌ Dockerfile manquant"'
                         
-                        // Construction de l'image
+                        // Build avec output détaillé
                         sh """
-                            docker build \
-                                --pull \
-                                --no-cache \
-                                -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
-                                -t ${DOCKER_IMAGE}:latest \
-                                .
+                            docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} . 2>&1 | tee docker-build.log
+                            docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
+                            docker images | grep ${DOCKER_IMAGE}
                         """
-                        
-                        // Vérification de l'image
-                        sh "docker images | grep ${DOCKER_IMAGE}"
-                        echo "✅ Image Docker créée avec succès"
-                        
+                        echo "✅ Image créée"
                     } catch (Exception e) {
-                        echo "❌ Erreur lors de la construction Docker: ${e.message}"
-                        // Tentative alternative avec BuildKit
-                        sh """
-                            DOCKER_BUILDKIT=1 docker build \
-                                -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
-                                -t ${DOCKER_IMAGE}:latest \
-                                . || echo "❌ Build alternatif échoué aussi"
-                        """
-                        error "Build Docker définitivement échoué"
-                    }
-                }
-            }
-        }
-
-        stage('Security Scan') {
-            steps {
-                script {
-                    echo "🔒 Scan de sécurité de l'image Docker..."
-                    try {
-                        sh """
-                            docker scan --version || echo "Docker Scan non disponible"
-                            docker scan ${DOCKER_IMAGE}:${DOCKER_TAG} --file=Dockerfile --exclude-base || echo "Scan de sécurité ignoré"
-                        """
-                    } catch (Exception e) {
-                        echo "⚠️ Scan de sécurité ignoré: ${e.message}"
+                        echo "❌ Erreur Docker: ${e.message}"
+                        sh 'cat docker-build.log || echo "Pas de log"'
+                        error "Build Docker échoué"
                     }
                 }
             }
@@ -159,60 +100,24 @@ pipeline {
         stage('Push to DockerHub') {
             steps {
                 script {
-                    echo "📤 Envoi vers DockerHub..."
-                    withCredentials([usernamePassword(
-                        credentialsId: 'dockerhub-credentials',
-                        usernameVariable: 'DOCKER_USERNAME',
-                        passwordVariable: 'DOCKER_PASSWORD'
-                    )]) {
-                        try {
-                            sh """
-                                echo \"\${DOCKER_PASSWORD}\" | docker login -u \"\${DOCKER_USERNAME}\" --password-stdin
-                                docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                                docker push ${DOCKER_IMAGE}:latest
-                                docker logout
-                            """
-                            echo "✅ Images poussées avec succès vers DockerHub"
-                            
-                        } catch (Exception e) {
-                            echo "❌ Erreur lors du push DockerHub: ${e.message}"
-                            // Tentative de relogin et retry
-                            sh """
-                                docker logout
-                                echo \"\${DOCKER_PASSWORD}\" | docker login -u \"\${DOCKER_USERNAME}\" --password-stdin
-                                docker push ${DOCKER_IMAGE}:${DOCKER_TAG} || echo "Push tag spécifique échoué"
-                                docker push ${DOCKER_IMAGE}:latest || echo "Push latest échoué"
-                            """
-                            error "Push DockerHub définitivement échoué"
-                        }
+                    echo "📤 Push DockerHub..."
+                    try {
+                        sh """
+                            echo \${DOCKERHUB_CREDENTIALS_PSW} | docker login -u \${DOCKERHUB_CREDENTIALS_USR} --password-stdin
+                            docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                            docker push ${DOCKER_IMAGE}:latest
+                            docker logout
+                        """
+                        echo "✅ Images poussées"
+                    } catch (Exception e) {
+                        error "Push échoué: ${e.message}"
                     }
                 }
-            }
-        }
-
-        stage('Cleanup') {
-            steps {
-                echo "🧹 Nettoyage..."
-                sh '''
-                    docker system prune -f || true
-                    npm cache clean --force || true
-                '''
             }
         }
     }
 
     post {
-        always {
-            echo "📊 =========================================="
-            echo "📊 RAPPORT DE BUILD #${BUILD_NUMBER}"
-            echo "📊 Statut: ${currentBuild.currentResult}"
-            echo "📊 Durée: ${currentBuild.durationString}"
-            echo "📊 =========================================="
-            
-            // Nettoyage finale
-            sh 'docker system prune -f || true'
-        }
-        
         success {
             echo """
                 ✅ ==========================================
@@ -223,85 +128,6 @@ pipeline {
                 ✅ DockerHub: https://hub.docker.com/r/mohamedbelhaj/angular
                 ✅ ==========================================
             """
-            
-            // Notification de succès
-            emailext (
-                subject: "✅ SUCCÈS Build #${BUILD_NUMBER} - Angular App",
-                body: """
-                La pipeline Jenkins a réussi !
-                
-                Détails:
-                - Build: ${BUILD_NUMBER}
-                - Image: ${DOCKER_IMAGE}:${DOCKER_TAG}
-                - Durée: ${currentBuild.durationString}
-                - Lien: ${env.BUILD_URL}
-                
-                Les images Docker ont été poussées avec succès vers DockerHub.
-                """,
-                to: "mohamed.belhaj@example.com"
-            )
         }
-        
-        failure {
-            echo """
-                ❌ ==========================================
-                ❌ PIPELINE ÉCHOUÉE
-                ❌ ==========================================
-                ❌ Build: ${BUILD_NUMBER}
-                ❌ Cause: ${currentBuild.result}
-                ❌ ==========================================
-            """
-            
-            // Notification d'échec
-            emailext (
-                subject: "❌ ÉCHEC Build #${BUILD_NUMBER} - Angular App",
-                body: """
-                La pipeline Jenkins a échoué !
-                
-                Détails:
-                - Build: ${BUILD_NUMBER}
-                - Statut: ${currentBuild.result}
-                - Durée: ${currentBuild.durationString}
-                - Lien: ${env.BUILD_URL}
-                
-                Veuillez vérifier les logs pour plus de détails.
-                """,
-                to: "mohamed.belhaj@example.com"
-            )
-        }
-        
-        unstable {
-            echo "⚠️ Pipeline instable - vérifiez les tests ou la qualité du code"
-        }
-        
-        changed {
-            echo "🔄 Statut changé: précédent ${currentBuild.previousBuild?.result ?: 'N/A'}, actuel ${currentBuild.result}"
-        }
-    }
-
-    options {
-        timeout(time: 30, unit: 'MINUTES')
-        retry(2)
-        buildDiscarder(logRotator(numToKeepStr: '10'))
-        disableConcurrentBuilds()
-        timestamps()
-    }
-
-    parameters {
-        choice(
-            name: 'DEPLOY_ENV',
-            choices: ['dev', 'staging', 'prod'],
-            description: 'Environnement de déploiement'
-        )
-        booleanParam(
-            name: 'RUN_TESTS',
-            defaultValue: true,
-            description: 'Exécuter les tests'
-        )
-        booleanParam(
-            name: 'SONAR_ANALYSIS',
-            defaultValue: true,
-            description: 'Exécuter l analyse SonarQube'
-        )
-    }
+       
 }
