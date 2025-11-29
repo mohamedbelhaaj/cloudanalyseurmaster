@@ -26,7 +26,8 @@ pipeline {
         stage('Build Angular App') {
             steps {
                 echo "🔨 Building Angular in production mode..."
-                sh 'npm run build --configuration production'
+                // ✅ CORRECTION ICI : Ajouter -- avant --configuration
+                sh 'npm run build -- --configuration production'
             }
         }
 
