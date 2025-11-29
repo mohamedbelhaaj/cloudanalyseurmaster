@@ -1,13 +1,7 @@
 pipeline {
     agent any
 
-    environment {
-        // Nom EXACT du scanner dans "Manage Jenkins -> Global Tool Configuration"
-        SONAR_SCANNER = tool 'SonarScanner'
-    }
-
     stages {
-
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/mohamedbelhaaj/cloudanalyseurmaster.git', branch: 'main'
@@ -22,25 +16,24 @@ pipeline {
 
         stage('Build Angular') {
             steps {
-                // Adapte si ton script de build est différent
-                sh 'npm run build --prod'
+                sh 'npm run build -- --configuration production'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                // Nom EXACT du serveur configuré dans "Manage Jenkins -> Configure System -> SonarQube Servers"
-                withSonarQubeEnv('SonarQube') {
-                    sh """
-                        ${SONAR_SCANNER}/bin/sonar-scanner \
-                        -Dsonar.projectKey=angular-app \
-                        -Dsonar.projectName=angular-app \
-                        -Dsonar.sources=src \
-                        -Dsonar.exclusions=**/*.spec.ts,**/environments/*,**/node_modules/**,**/dist/** \
-                        -Dsonar.tests=src \
-                        -Dsonar.test.inclusions=**/*.spec.ts \
-                        -Dsonar.sourceEncoding=UTF-8
-                    """
+                script {
+                    def scannerHome = tool 'SonarScanner'
+                    withSonarQubeEnv('SonarQube') {
+                        sh """
+                            ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=angular-app \
+                            -Dsonar.projectName=angular-app \
+                            -Dsonar.sources=src \
+                            -Dsonar.exclusions=**/*.spec.ts,**/node_modules/**,**/dist/** \
+                            -Dsonar.sourceEncoding=UTF-8
+                        """
+                    }
                 }
             }
         }
