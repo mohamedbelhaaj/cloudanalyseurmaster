@@ -1,142 +1,63 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs "node16"       // Nom configuré dans Jenkins → Tools → NodeJS
+    }
+
     environment {
-        SONAR_TOKEN = credentials('SONAR-TOKEN1')
-        SONAR_HOST_URL = 'http://sonarqube:9000'
-        DOCKER_IMAGE = 'mohamedbelhaj/angular'
-        DOCKER_TAG = "${BUILD_NUMBER}"
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        SONAR_SCANNER = tool 'SonarScanner'   // Nom dans Jenkins → Global Tool Configuration
     }
 
     stages {
+
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/mohamedbelhaaj/cloudanalyseurmaster.git', branch: 'main'
-                echo "✅ Code récupéré depuis GitHub"
+                      git url: 'https://github.com/mohamedbelhaaj/cloudanalyseurmaster.git', branch: 'main'
+
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                echo "📦 Installation des dépendances npm..."
-                sh 'npm install --legacy-peer-deps'
-                echo "✅ Dépendances installées"
+                sh 'npm install'
             }
         }
 
-        stage('Build Angular App') {
+        stage('Build Angular') {
             steps {
-                echo "🔨 Build de l'application Angular..."
-                sh 'npm run build -- --configuration production'
-                echo "✅ Build Angular réussi"
-                sh 'ls -la dist/threat-analysis-app/'
+                sh 'npm run build --prod'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    echo "📊 Lancement de l'analyse SonarQube..."
-                    try {
-                        sh """
-                            npx sonar-scanner \
-                            -Dsonar.projectKey=angular-app \
-                            -Dsonar.projectName=angular-app \
-                            -Dsonar.sources=src \
-                            -Dsonar.exclusions=**/*.spec.ts,**/node_modules/**,**/dist/** \
-                            -Dsonar.host.url=${SONAR_HOST_URL} \
-                            -Dsonar.token=${SONAR_TOKEN} || true
-                        """
-                        echo "✅ Analyse SonarQube terminée"
-                    } catch (Exception e) {
-                        echo "⚠️ SonarQube non disponible - ${e.message}"
-                        echo "⚠️ On continue sans SonarQube..."
-                    }
+                withSonarQubeEnv('SonarQube') {   // Nom du serveur dans Jenkins → Configure System
+                    sh """
+                        ${SONAR_SCANNER}/bin/sonar-scanner \
+                        -Dsonar.projectKey=angular-app \
+                        -Dsonar.sources=src \
+                        -Dsonar.exclusions=**/*.spec.ts,**/environments/* \
+                        -Dsonar.tests=src \
+                        -Dsonar.test.inclusions=**/*.spec.ts \
+                        -Dsonar.sourceEncoding=UTF-8
+                    """
                 }
             }
         }
 
-        stage('Build Docker Image') {
+        stage("Quality Gate") {
             steps {
-                script {
-                    echo "🐳 Construction de l'image Docker..."
-                    
-                    // Vérifier Docker
-                    sh 'docker --version'
-                    sh 'docker info | head -20'
-                    
-                    // Vérifier Dockerfile
-                    sh 'test -f Dockerfile && echo "✅ Dockerfile trouvé"'
-                    
-                    // Build Docker
-                    sh """
-                        docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                        docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
-                    """
-                    
-                    echo "✅ Image Docker créée : ${DOCKER_IMAGE}:${DOCKER_TAG}"
-                    sh "docker images | grep ${DOCKER_IMAGE}"
-                }
-            }
-        }
-
-        stage('Push to DockerHub') {
-            steps {
-                script {
-                    echo "📤 Push vers DockerHub..."
-                    sh """
-                        echo \${DOCKERHUB_CREDENTIALS_PSW} | docker login -u \${DOCKERHUB_CREDENTIALS_USR} --password-stdin
-                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                        docker push ${DOCKER_IMAGE}:latest
-                        docker logout
-                    """
-                    echo "✅ Images poussées sur DockerHub"
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
     }
 
     post {
-        success {
-            script {
-                echo """
-╔════════════════════════════════════════════════════════════╗
-║                                                            ║
-║           ✅ 🎉 PIPELINE RÉUSSIE ! 🎉 ✅                  ║
-║                                                            ║
-╚════════════════════════════════════════════════════════════╝
-
-📦 Build Number: ${BUILD_NUMBER}
-🐳 Image Docker: ${DOCKER_IMAGE}:${DOCKER_TAG}
-🔗 DockerHub: https://hub.docker.com/r/mohamedbelhaj/angular/tags
-📊 SonarQube: ${SONAR_HOST_URL}/dashboard?id=angular-app
-
-Pour utiliser l'image:
-  docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
-  docker run -p 80:80 ${DOCKER_IMAGE}:${DOCKER_TAG}
-                """
-            }
-        }
-        failure {
-            script {
-                echo """
-╔════════════════════════════════════════════════════════════╗
-║                                                            ║
-║              ❌ PIPELINE ÉCHOUÉE ❌                        ║
-║                                                            ║
-╚════════════════════════════════════════════════════════════╝
-
-❌ Build Number: ${BUILD_NUMBER}
-❌ Consultez les logs ci-dessus pour identifier le problème
-                """
-            }
-        }
         always {
-            script {
-                echo "🧹 Nettoyage des ressources Docker..."
-                sh 'docker system prune -f || true'
-            }
+            echo 'Pipeline terminé.'
         }
     }
 }
