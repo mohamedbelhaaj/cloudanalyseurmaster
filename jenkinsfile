@@ -53,7 +53,7 @@ pipeline {
             steps {
                 script {
                     def scannerHome = tool 'SonarScanner'
-                    withCredentials([string(credentialsId: 'sonarscanner', variable: 'SONAR_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'sonarscanner', variable: 'SONAR-TOKEN')]) {
                         sh """
                             echo "===== Running SonarScanner for Angular ====="
                             ${scannerHome}/bin/sonar-scanner \
@@ -61,7 +61,7 @@ pipeline {
                                 -Dsonar.projectName=angular-app \
                                 -Dsonar.sources=src \
                                 -Dsonar.host.url=http://host.docker.internal:9000 \
-                                -Dsonar.token=\${SONAR_TOKEN} \
+                                -Dsonar.token=\${SONAR-TOKEN} \
                                 -Dsonar.exclusions=**/*.spec.ts,**/node_modules/**,**/dist/**,**/*.test.ts \
                                 -Dsonar.sourceEncoding=UTF-8 \
                                 -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
