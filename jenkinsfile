@@ -13,61 +13,45 @@ pipeline {
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/mohamedbelhaaj/cloudanalyseurmaster.git', branch: 'main'
-                echo "✅ Code récupéré"
+                echo "✅ Code récupéré depuis GitHub"
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                echo "📦 Installation des dépendances..."
+                echo "📦 Installation des dépendances npm..."
                 sh 'npm install --legacy-peer-deps'
+                echo "✅ Dépendances installées"
             }
         }
 
-        stage('Build Angular') {
+        stage('Build Angular App') {
             steps {
-                echo "🔨 Build Angular..."
+                echo "🔨 Build de l'application Angular..."
                 sh 'npm run build -- --configuration production'
-                echo "✅ Build réussi"
-            }
-        }
-
-        stage('Test Docker Access') {
-            steps {
-                script {
-                    echo "🔍 Test de l'accès Docker..."
-                    
-                    // Test 1: Version Docker
-                    sh 'docker --version'
-                    
-                    // Test 2: Docker info
-                    sh 'docker info || echo "Docker info failed"'
-                    
-                    // Test 3: Lister les conteneurs
-                    sh 'docker ps || echo "Docker ps failed"'
-                    
-                    // Test 4: Permissions du socket
-                    sh 'ls -la /var/run/docker.sock || echo "Socket not found"'
-                    
-                    echo "✅ Tests Docker terminés"
-                }
+                echo "✅ Build Angular réussi"
+                sh 'ls -la dist/threat-analysis-app/'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    echo "📊 Analyse SonarQube..."
+                    echo "📊 Lancement de l'analyse SonarQube..."
                     try {
                         sh """
                             npx sonar-scanner \
-                            -Dsonar.projectKey=angular \
+                            -Dsonar.projectKey=angular-app \
+                            -Dsonar.projectName=Angular-Cloud-Analyser \
                             -Dsonar.sources=src \
+                            -Dsonar.exclusions=**/*.spec.ts,**/node_modules/**,**/dist/** \
                             -Dsonar.host.url=${SONAR_HOST_URL} \
                             -Dsonar.token=${SONAR_TOKEN} || true
                         """
+                        echo "✅ Analyse SonarQube terminée"
                     } catch (Exception e) {
-                        echo "⚠️ SonarQube ignoré: ${e.message}"
+                        echo "⚠️ SonarQube non disponible - ${e.message}"
+                        echo "⚠️ On continue sans SonarQube..."
                     }
                 }
             }
@@ -76,23 +60,23 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "🐳 Construction Docker..."
-                    try {
-                        // Vérifier que le Dockerfile existe
-                        sh 'test -f Dockerfile && echo "✅ Dockerfile trouvé" || echo "❌ Dockerfile manquant"'
-                        
-                        // Build avec output détaillé
-                        sh """
-                            docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} . 2>&1 | tee docker-build.log
-                            docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
-                            docker images | grep ${DOCKER_IMAGE}
-                        """
-                        echo "✅ Image créée"
-                    } catch (Exception e) {
-                        echo "❌ Erreur Docker: ${e.message}"
-                        sh 'cat docker-build.log || echo "Pas de log"'
-                        error "Build Docker échoué"
-                    }
+                    echo "🐳 Construction de l'image Docker..."
+                    
+                    // Vérifier Docker
+                    sh 'docker --version'
+                    sh 'docker info | head -20'
+                    
+                    // Vérifier Dockerfile
+                    sh 'test -f Dockerfile && echo "✅ Dockerfile trouvé"'
+                    
+                    // Build Docker
+                    sh """
+                        docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                        docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
+                    """
+                    
+                    echo "✅ Image Docker créée : ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                    sh "docker images | grep ${DOCKER_IMAGE}"
                 }
             }
         }
@@ -100,18 +84,14 @@ pipeline {
         stage('Push to DockerHub') {
             steps {
                 script {
-                    echo "📤 Push DockerHub..."
-                    try {
-                        sh """
-                            echo \${DOCKERHUB_CREDENTIALS_PSW} | docker login -u \${DOCKERHUB_CREDENTIALS_USR} --password-stdin
-                            docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                            docker push ${DOCKER_IMAGE}:latest
-                            docker logout
-                        """
-                        echo "✅ Images poussées"
-                    } catch (Exception e) {
-                        error "Push échoué: ${e.message}"
-                    }
+                    echo "📤 Push vers DockerHub..."
+                    sh """
+                        echo \${DOCKERHUB_CREDENTIALS_PSW} | docker login -u \${DOCKERHUB_CREDENTIALS_USR} --password-stdin
+                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        docker push ${DOCKER_IMAGE}:latest
+                        docker logout
+                    """
+                    echo "✅ Images poussées sur DockerHub"
                 }
             }
         }
@@ -119,31 +99,43 @@ pipeline {
 
     post {
         success {
-            echo """
-                ✅ ==========================================
-                ✅ 🎉 PIPELINE RÉUSSIE! 🎉
-                ✅ ==========================================
-                ✅ Build: ${BUILD_NUMBER}
-                ✅ Image: ${DOCKER_IMAGE}:${DOCKER_TAG}
-                ✅ DockerHub: https://hub.docker.com/r/mohamedbelhaj/angular
-                ✅ ==========================================
-            """
+            script {
+                echo """
+╔════════════════════════════════════════════════════════════╗
+║                                                            ║
+║           ✅ 🎉 PIPELINE RÉUSSIE ! 🎉 ✅                  ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+
+📦 Build Number: ${BUILD_NUMBER}
+🐳 Image Docker: ${DOCKER_IMAGE}:${DOCKER_TAG}
+🔗 DockerHub: https://hub.docker.com/r/mohamedbelhaj/angular/tags
+📊 SonarQube: ${SONAR_HOST_URL}/dashboard?id=angular-app
+
+Pour utiliser l'image:
+  docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
+  docker run -p 80:80 ${DOCKER_IMAGE}:${DOCKER_TAG}
+                """
+            }
         }
         failure {
-            echo """
-                ❌ ==========================================
-                ❌ PIPELINE ÉCHOUÉE
-                ❌ Build: ${BUILD_NUMBER}
-                ❌ ==========================================
-            """
+            script {
+                echo """
+╔════════════════════════════════════════════════════════════╗
+║                                                            ║
+║              ❌ PIPELINE ÉCHOUÉE ❌                        ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+
+❌ Build Number: ${BUILD_NUMBER}
+❌ Consultez les logs ci-dessus pour identifier le problème
+                """
+            }
         }
         always {
             script {
-                try {
-                    sh 'docker system prune -f || true'
-                } catch (Exception e) {
-                    echo "Nettoyage ignoré"
-                }
+                echo "🧹 Nettoyage des ressources Docker..."
+                sh 'docker system prune -f || true'
             }
         }
     }
