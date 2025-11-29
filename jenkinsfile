@@ -1,11 +1,6 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:20-alpine'  // Utilisez Node 20 pour éviter les warnings
-            args '-v /var/run/docker.sock:/var/run/docker.sock -u root'
-        }
-    }
-
+        agn any
+        
     environment {
         SONAR_TOKEN = credentials('SONAR-TOKEN')
         SONAR_HOST_URL = 'http://host.docker.internal:9000'
