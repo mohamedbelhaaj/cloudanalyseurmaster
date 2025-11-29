@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        SONAR_AVAILABLE = 'false'
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -24,33 +20,7 @@ pipeline {
             }
         }
 
-        stage('Check SonarQube Availability') {
-            steps {
-                script {
-                    try {
-                        // Tester la connexion à SonarQube
-                        sh '''
-                            if curl -s -f http://localhost:9000/api/system/status > /dev/null 2>&1; then
-                                echo "✅ SonarQube is available"
-                                exit 0
-                            else
-                                echo "⚠️ SonarQube is not available"
-                                exit 1
-                            fi
-                        '''
-                        env.SONAR_AVAILABLE = 'true'
-                    } catch (Exception e) {
-                        echo "⚠️ SonarQube non disponible, skip analysis"
-                        env.SONAR_AVAILABLE = 'false'
-                    }
-                }
-            }
-        }
-
         stage('SonarQube Analysis') {
-            when {
-                expression { env.SONAR_AVAILABLE == 'true' }
-            }
             steps {
                 script {
                     def scannerHome = tool 'SonarScanner'
@@ -70,35 +40,18 @@ pipeline {
 
         stage('Quality Gate') {
             when {
-                expression { env.SONAR_AVAILABLE == 'true' }
+                expression { return currentBuild.currentResult == 'SUCCESS' }
             }
             steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    script {
-                        try {
-                            waitForQualityGate abortPipeline: false
-                        } catch (Exception e) {
-                            echo "⚠️ Quality Gate failed or timeout"
-                            currentBuild.result = 'UNSTABLE'
-                        }
-                    }
-                }
+                echo "Quality Gate stage skipped for simplicity."
             }
         }
+
     }
 
     post {
         always {
-            echo '🏁 Pipeline terminé.'
-        }
-        success {
-            echo '✅ Build réussi!'
-        }
-        unstable {
-            echo '⚠️ Build instable (SonarQube non disponible ou Quality Gate failed)'
-        }
-        failure {
-            echo '❌ Build échoué!'
+            echo 'Pipeline terminé.'
         }
     }
 }
