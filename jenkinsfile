@@ -2,13 +2,11 @@ pipeline {
     agent any
 
     environment {
-        SONAR_TOKEN = credentials('sonarscanner')
         SONAR_HOST_URL = 'http://host.docker.internal:9000'
         DOCKER_IMAGE = 'mohamedbelhaj/angular-app'
         DOCKER_TAG = "${BUILD_NUMBER}"
-        DOCKER_HOST = 'tcp://host.docker.internal:2375'
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
-        SONAR_AVAILABLE = 'false'
+        SONAR_AVAILABLE = 'true'  // mettre true si Sonar doit être exécuté
     }
 
     stages {
@@ -19,33 +17,6 @@ pipeline {
             }
         }
 
-        stage('Check SonarQube Availability') {
-            steps {
-                script {
-                    try {
-                        def result = sh(
-                            script: '''
-                                echo "===== Testing SonarQube connection ====="
-                                curl -s -f http://host.docker.internal:9000/api/system/status > /dev/null 2>&1
-                            ''',
-                            returnStatus: true
-                        )
-                        
-                        if (result == 0) {
-                            echo "✅ SonarQube is available"
-                            env.SONAR_AVAILABLE = 'true'
-                        } else {
-                            echo "⚠️ SonarQube is not available"
-                            env.SONAR_AVAILABLE = 'false'
-                        }
-                    } catch (Exception e) {
-                        echo "⚠️ SonarQube non disponible, skip analysis: ${e.message}"
-                        env.SONAR_AVAILABLE = 'false'
-                    }
-                }
-            }
-        }
-
         stage('SonarQube Analysis') {
             when {
                 expression { env.SONAR_AVAILABLE == 'true' }
@@ -53,15 +24,15 @@ pipeline {
             steps {
                 script {
                     def scannerHome = tool 'SonarScanner'
-                    withCredentials([string(credentialsId: 'sonarscanner', variable: 'SONAR_TOKEN_CRED')]) {
+                    withCredentials([string(credentialsId: 'sonarscanner', variable: 'SONAR_TOKEN')]) {
                         sh """
                             echo "===== Running SonarScanner for Angular ====="
                             ${scannerHome}/bin/sonar-scanner \
                                 -Dsonar.projectKey=angular-app \
                                 -Dsonar.projectName=angular-app \
                                 -Dsonar.sources=src \
-                                -Dsonar.host.url=http://host.docker.internal:9000 \
-                                -Dsonar.token=\${SONAR_TOKEN_CRED} \
+                                -Dsonar.host.url=${SONAR_HOST_URL} \
+                                -Dsonar.token=${SONAR_TOKEN} \
                                 -Dsonar.exclusions=**/*.spec.ts,**/node_modules/**,**/dist/**,**/*.test.ts \
                                 -Dsonar.sourceEncoding=UTF-8 \
                                 -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
@@ -85,28 +56,31 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                    echo "===== Building Docker Image for Angular ====="
-                    docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
-                    docker tag $DOCKER_IMAGE:$DOCKER_TAG $DOCKER_IMAGE:latest
-                    echo "===== Image created: $DOCKER_IMAGE:$DOCKER_TAG ====="
+                sh """
+                    echo "===== Building Docker Image ====="
+                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                    docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
+                    echo "===== Docker Image created: ${DOCKER_IMAGE}:${DOCKER_TAG} ====="
                     docker images | grep angular-app
-                '''
+                """
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                sh '''
-                    echo "===== Logging in to Docker Hub ====="
-                    echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin
-                    
-                    echo "===== Pushing Docker Image ====="
-                    docker push $DOCKER_IMAGE:$DOCKER_TAG
-                    docker push $DOCKER_IMAGE:latest
-                    
-                    echo "===== Push completed successfully ====="
-                '''
+                script {
+                    sh """
+                        echo "===== Logging in to Docker Hub ====="
+                        echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin
+                        
+                        echo "===== Pushing Docker Image ====="
+                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        docker push ${DOCKER_IMAGE}:latest
+                        
+                        echo "===== Push completed successfully ====="
+                        docker logout
+                    """
+                }
             }
         }
 
@@ -115,7 +89,6 @@ pipeline {
     post {
         always {
             echo '🏁 Pipeline terminé.'
-            sh 'docker logout'
         }
         success {
             echo '✅ Build et déploiement réussis!'
