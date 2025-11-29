@@ -1,9 +1,7 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs "node16"       // Nom configuré dans Jenkins → Tools → NodeJS
-    }
+
 
     environment {
         SONAR_SCANNER = tool 'SonarScanner'   // Nom dans Jenkins → Global Tool Configuration
