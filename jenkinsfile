@@ -1,6 +1,6 @@
 pipeline {
-        agn any
-        
+    agent any
+
     environment {
         SONAR_TOKEN = credentials('SONAR-TOKEN')
         SONAR_HOST_URL = 'http://host.docker.internal:9000'
