@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'node:18-alpine'
+            image 'node:20-alpine'  // Utilisez Node 20 pour éviter les warnings
             args '-v /var/run/docker.sock:/var/run/docker.sock -u root'
         }
     }
@@ -30,20 +30,15 @@ pipeline {
 
         stage('Unit Tests') {
             steps {
-                script {
-                    echo "Running Angular Unit Tests..."
-                    // Utiliser catchError pour continuer même si les tests échouent
-                    catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                        sh 'npm test -- --watch=false --browsers=ChromeHeadless'
-                    }
-                }
+                echo "Running Angular Unit Tests..."
+                sh 'npm test -- --watch=false --browsers=ChromeHeadless'
             }
         }
 
         stage('Build Angular App') {
             steps {
                 echo "Building Angular in production mode..."
-                sh 'npm run build --configuration production || npm run build'
+                sh 'npm run build --configuration production'
             }
         }
 
@@ -68,13 +63,7 @@ pipeline {
         stage('Quality Gate') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
-                    script {
-                        try {
-                            waitForQualityGate abortPipeline: true
-                        } catch (Exception e) {
-                            echo "Quality Gate échoué mais on continue : ${e.message}"
-                        }
-                    }
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
