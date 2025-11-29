@@ -7,7 +7,6 @@ import { DashboardService } from '@core/services/dashboard.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Chart } from 'chart.js/auto';
-import { NavbarAdminComponent } from '../navbar-admin/navbar-admin.component';
 interface DashboardStats {
   overview: {
     total_reports: number;
@@ -47,7 +46,7 @@ interface AWSStatus {
 @Component({
   selector: 'app-dashboard-admin',
   standalone: true,
-  imports: [FormsModule, CommonModule, RouterModule,NavbarAdminComponent],
+  imports: [FormsModule, CommonModule, RouterModule],
   templateUrl: './dashboard-admin.component.html',
   styleUrl: './dashboard-admin.component.scss'
 })
