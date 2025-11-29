@@ -45,7 +45,7 @@ pipeline {
                             -Dsonar.tests=src \
                             -Dsonar.test.inclusions=**/*.spec.ts \
                             -Dsonar.host.url=${SONAR_HOST_URL} \
-                            -Dsonar.token=${SONAR_TOKEN}
+                            -Dsonar.token=${SONAR-TOKEN}
                         """
                     }
                 }
