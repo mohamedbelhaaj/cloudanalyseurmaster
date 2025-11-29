@@ -6,11 +6,12 @@ import { AuthService } from './core/services/auth.service';
 import { filter } from 'rxjs';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NavbarAdminComponent } from '@features/admin/navbar-admin/navbar-admin.component';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, NavbarComponent, ReactiveFormsModule, NavbarAdminComponent],
+  imports: [CommonModule, RouterOutlet, NavbarComponent, ReactiveFormsModule, NavbarAdminComponent,HttpClientTestingModule],
   template: `
     <div class="app-container">
       <!-- Navbar for Analyst (regular user) -->

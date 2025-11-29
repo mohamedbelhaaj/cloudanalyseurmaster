@@ -17,7 +17,6 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            
             "outputPath": "dist/threat-analysis-app",
             "index": "src/index.html",
             "browser": "src/main.ts",
@@ -39,19 +38,17 @@
           },
           "configurations": {
             "production": {
-              "budgets": [{
-               "type": "initial",
-      "maximumWarning": "2mb",
-      "maximumError": "5mb"
-    },
-                 {
-      "type": "anyComponentStyle",
-      "maximumWarning": "15kb",
-      "maximumError": "20kb"
-    
-
-  } 
-  
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "15kb",
+                  "maximumError": "20kb"
+                }
               ],
               "outputHashing": "all"
             },
@@ -98,8 +95,22 @@
             ],
             "scripts": []
           }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
+            ]
+          }
         }
       }
     }
+  },
+  "cli": {
+    "schematicCollections": [
+      "angular-eslint"
+    ]
   }
 }
