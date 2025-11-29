@@ -6,7 +6,10 @@ import { of } from 'rxjs';
 
 // Mock pour ActivatedRoute
 const mockActivatedRoute = {
-  snapshot: { paramMap: new Map() },
+  snapshot: { 
+    paramMap: new Map(),
+    queryParamMap: new Map() 
+  },
   params: of({}),
   queryParams: of({}),
   fragment: of(null)
