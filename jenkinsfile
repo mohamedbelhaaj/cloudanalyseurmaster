@@ -4,7 +4,7 @@ pipeline {
     environment {
         SONAR_TOKEN = credentials('SONAR-TOKEN1')
         SONAR_HOST_URL = 'http://sonarqube:9000'
-        DOCKER_IMAGE = 'mohamedbelhaj/angular-app'
+        DOCKER_IMAGE = 'mohamedbelhaj/angular'
         DOCKER_TAG = "${BUILD_NUMBER}"
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         // Ajouter le chemin Docker si disponible
