@@ -129,5 +129,22 @@ pipeline {
                 ✅ ==========================================
             """
         }
-       
+        failure {
+            echo """
+                ❌ ==========================================
+                ❌ PIPELINE ÉCHOUÉE
+                ❌ Build: ${BUILD_NUMBER}
+                ❌ ==========================================
+            """
+        }
+        always {
+            script {
+                try {
+                    sh 'docker system prune -f || true'
+                } catch (Exception e) {
+                    echo "Nettoyage ignoré"
+                }
+            }
+        }
+    }
 }
