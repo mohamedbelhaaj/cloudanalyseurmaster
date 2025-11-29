@@ -6,7 +6,7 @@ import { AuthService } from '@core/services/auth.service';
 import { DashboardService } from '@core/services/dashboard.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { Chart, ChartConfiguration } from 'chart.js/auto';
+import { Chart } from 'chart.js/auto';
 import { NavbarAdminComponent } from '../navbar-admin/navbar-admin.component';
 interface DashboardStats {
   overview: {

@@ -56,7 +56,7 @@
             <span><strong>Region:</strong> {{ awsStatus.region }}</span>
             <span><strong>VPC Status:</strong> {{ awsStatus.vpc_status | uppercase }}</span>
             <span><strong>Active Configs:</strong> {{ awsStatus.active_configurations }}</span>
-            <span><strong>Security Groups:</strong> {{ awsStatus.security_groups?.length || 0 }}</span>
+            <span><strong>Security Groups:</strong>   {{ awsStatus.security_groups.length || 0 }}</span>
           </div>
         </div>
       </div>

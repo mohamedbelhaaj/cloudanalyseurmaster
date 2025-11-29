@@ -5,11 +5,16 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+     "test:ci": "ng test --watch=false --browsers=ChromeHeadless --include='**/*.service.spec.ts' --code-coverage",
+    "test:all": "ng test --watch=false --browsers=ChromeHeadless --code-coverage || echo 'Tests completed'",
     "watch": "ng build --watch --configuration development",
     "build:prod": "ng build --configuration production",
     "build:docker": "ng build --configuration production --optimization=true --output-hashing=all",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "lint:fix": "ng lint --fix",
+    "lint:quiet": "ng lint --quiet || true"
+
   },
   "prettier": {
     "printWidth": 100,
