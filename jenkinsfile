@@ -107,9 +107,6 @@ pipeline {
         failure {
             echo "❌ La pipeline a échoué"
         }
-        always {
-            echo "🧹 Cleaning up..."
-            sh 'docker system prune -f || true'
-        }
+       
     }
 }
