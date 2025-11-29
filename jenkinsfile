@@ -1,26 +1,14 @@
 pipeline {
     agent any
 
-
-
     environment {
-<<<<<<< HEAD
         SONAR_SCANNER = tool 'SonarScanner'   // Nom dans Jenkins → Global Tool Configuration
-=======
-        SONAR_SCANNER = tool 'SonarScanner'
->>>>>>> 9b76825 (chi)
     }
 
     stages {
-
         stage('Checkout') {
             steps {
-<<<<<<< HEAD
-                      git url: 'https://github.com/mohamedbelhaaj/cloudanalyseurmaster.git', branch: 'main'
-
-=======
                 git url: 'https://github.com/mohamedbelhaaj/cloudanalyseurmaster.git', branch: 'main'
->>>>>>> 9b76825 (chi)
             }
         }
 
@@ -38,11 +26,7 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-<<<<<<< HEAD
                 withSonarQubeEnv('SonarQube') {   // Nom du serveur dans Jenkins → Configure System
-=======
-                withSonarQubeEnv('SonarQube') {
->>>>>>> 9b76825 (chi)
                     sh """
                         ${SONAR_SCANNER}/bin/sonar-scanner \
                         -Dsonar.projectKey=angular-app \
