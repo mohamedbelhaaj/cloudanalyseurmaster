@@ -1,27 +1,34 @@
-# Étape 1 : Construire l'application Angular
-FROM node:18-alpine AS build
+# Étape 1 : Build
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Copier package.json et installer les dépendances
+# Copier les fichiers de dépendances
 COPY package*.json ./
-RUN npm install
 
-# Copier le reste de l'application
+# Installer les dépendances
+RUN npm ci --legacy-peer-deps
+
+# Copier le code source
 COPY . .
 
-# Construire l'application
-RUN npm run build --prod || npm run build
+# Build l'application
+RUN npm run build --configuration production
 
-# Étape 2 : Servir avec Nginx
+# Étape 2 : Production
 FROM nginx:alpine
 
-# Copier les fichiers construits (vérifier le nom du dossier dans dist/)
+# Copier les fichiers buildés
 COPY --from=build /app/dist/threat-analysis-app/browser /usr/share/nginx/html
 
-# Copier la configuration Nginx personnalisée (optionnel)
+# Copier la configuration nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Exposer le port
 EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
