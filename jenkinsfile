@@ -46,31 +46,14 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            when {
-                expression { env.SONAR_AVAILABLE == 'true' }
-            }
-            steps {
-                script {
-                    def scannerHome = tool 'SonarScanner'
-                    withCredentials([string(credentialsId: 'sonarscanner', variable: 'SONAR_TOKEN_CRED')]) {
-                        sh """
-                            echo "===== Running SonarScanner for Angular ====="
-                            ${scannerHome}/bin/sonar-scanner \
-                                -Dsonar.projectKey=angular-app \
-                                -Dsonar.projectName=angular-app \
-                                -Dsonar.sources=src \
-                                -Dsonar.host.url=http://host.docker.internal:9000 \
-                                -Dsonar.token=\${SONAR_TOKEN_CRED} \
-                                -Dsonar.exclusions=**/*.spec.ts,**/node_modules/**,**/dist/**,**/*.test.ts \
-                                -Dsonar.sourceEncoding=UTF-8 \
-                                -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
-                            echo "===== SonarQube analysis completed ====="
-                        """
-                    }
-                }
-            }
-        }
+          stage('SonarQube Analysis') {
+    def scannerHome = tool 'SonarScanner';
+    withSonarQubeEnv() {
+      sh "${scannerHome}/bin/sonar-scanner"
+    }
+  }
+}
+
 
         stage('Quality Gate') {
             when {
