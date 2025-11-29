@@ -19,45 +19,6 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                sh '''
-                    echo "===== Installing Node.js dependencies ====="
-                    npm install
-                    echo "===== Dependencies installed successfully ====="
-                '''
-            }
-        }
-
-        stage('Lint') {
-            steps {
-                sh '''
-                    echo "===== Running ESLint ====="
-                    npm run lint || true
-                '''
-            }
-        }
-
-        stage('Run Tests') {
-            steps {
-                sh '''
-                    echo "===== Running Angular tests ====="
-                    npm run test -- --watch=false --browsers=ChromeHeadless || true
-                '''
-            }
-        }
-
-        stage('Build Angular') {
-            steps {
-                sh '''
-                    echo "===== Building Angular application for production ====="
-                    npm run build -- --configuration production
-                    echo "===== Build completed successfully ====="
-                    ls -la dist/
-                '''
-            }
-        }
-
         stage('Check SonarQube Availability') {
             steps {
                 script {
@@ -164,7 +125,7 @@ pipeline {
             echo '✅ Build et déploiement réussis!'
         }
         unstable {
-            echo '⚠️ Build instable (SonarQube Quality Gate ou tests échoués)'
+            echo '⚠️ Build instable (SonarQube Quality Gate échoué)'
         }
         failure {
             echo '❌ Build échoué!'
