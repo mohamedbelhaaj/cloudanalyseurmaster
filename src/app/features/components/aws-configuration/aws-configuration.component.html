@@ -1,384 +1,94 @@
-<!-- aws-configuration.component.html -->
-<div class="container-fluid py-4">
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">AWS Configurations</h2>
-    <button class="btn btn-primary" (click)="openCreateForm()" [disabled]="loading">
-      <i class="fas fa-plus me-2"></i>Add Configuration
+<div class="config-container">
+  
+  <header class="page-header">
+    <div class="header-content">
+      <h1>AWS Configurations</h1>
+      <p class="subtitle">Manage credentials and resources</p>
+    </div>
+    <button class="btn btn-primary" (click)="toggleForm()">
+      {{ showForm ? 'Cancel' : '+ Add Configuration' }}
     </button>
+  </header>
+
+  <div class="alert alert-success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="alert alert-error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Processing...</p>
   </div>
 
-  <!-- Global Messages -->
-  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
-    <i class="fas fa-exclamation-circle me-2"></i>{{ errorMessage }}
-    <button type="button" class="btn-close" (click)="errorMessage = ''" aria-label="Close"></button>
-  </div>
-
-  <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
-    <i class="fas fa-check-circle me-2"></i>{{ successMessage }}
-    <button type="button" class="btn-close" (click)="successMessage = ''" aria-label="Close"></button>
-  </div>
-
-  <!-- Loading Spinner -->
-  <div *ngIf="loading && !showForm" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
-  </div>
-
-  <!-- Configurations List -->
-  <div *ngIf="!showForm && !loading" class="row">
-    <div class="col-12" *ngIf="configurations.length === 0">
-      <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>
-        No AWS configurations found. Click "Add Configuration" to create your first one.
-      </div>
-    </div>
-
-    <div class="col-md-6 col-lg-4 mb-4" *ngFor="let config of configurations">
-      <div class="card h-100" [class.border-primary]="config.is_active" [class.border-2]="config.is_active">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">
-            {{ config.name }}
-            <span *ngIf="config.is_active" class="badge bg-success ms-2">Active</span>
-          </h5>
-          <div class="dropdown">
-            <button class="btn btn-sm btn-link text-muted" type="button" 
-                    data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="fas fa-ellipsis-v"></i>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <a class="dropdown-item" (click)="openEditForm(config)">
-                  <i class="fas fa-edit me-2"></i>Edit
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="testCredentials(config.id!)">
-                  <i class="fas fa-check-circle me-2"></i>Test Credentials
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="getResources(config.id!)">
-                  <i class="fas fa-server me-2"></i>View Resources
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item" (click)="syncResources(config.id!)">
-                  <i class="fas fa-sync me-2"></i>Sync Resources
-                </a>
-              </li>
-              <li *ngIf="!config.is_active">
-                <a class="dropdown-item" (click)="setActiveConfiguration(config.id!)">
-                  <i class="fas fa-star me-2"></i>Set as Active
-                </a>
-              </li>
-              <li><hr class="dropdown-divider"></li>
-              <li>
-                <a class="dropdown-item text-danger" (click)="deleteConfiguration(config.id!)">
-                  <i class="fas fa-trash me-2"></i>Delete
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="mb-3">
-            <small class="text-muted d-block">Region</small>
-            <strong>{{ config.aws_region }}</strong>
-          </div>
-          <div class="mb-3">
-            <small class="text-muted d-block">Access Key</small>
-            <code class="text-truncate d-block">{{ config.aws_access_key }}</code>
-          </div>
-          <div class="mb-3" *ngIf="config.vpc_id">
-            <small class="text-muted d-block">VPC ID</small>
-            <code>{{ config.vpc_id }}</code>
-          </div>
-          <div class="mb-3" *ngIf="config.security_group_id">
-            <small class="text-muted d-block">Security Group</small>
-            <code>{{ config.security_group_id }}</code>
-          </div>
-          <div class="mb-3">
-            <small class="text-muted d-block">Auto Block</small>
-            <span *ngIf="config.auto_block_enabled" class="badge bg-success">
-              Enabled (Threshold: {{ config.auto_block_threshold }})
-            </span>
-            <span *ngIf="!config.auto_block_enabled" class="badge bg-secondary">Disabled</span>
-          </div>
-          <div>
-            <small class="text-muted d-block">Created</small>
-            <span>{{ config.created_at | date:'short' }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Configuration Form -->
-  <div *ngIf="showForm" class="card">
-    <div class="card-header">
-      <h4 class="mb-0">{{ isEditing ? 'Edit' : 'Create' }} AWS Configuration</h4>
-    </div>
-    <div class="card-body">
-      <form [formGroup]="configForm" (ngSubmit)="onSubmit()">
-        <!-- Basic Information -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h5 class="border-bottom pb-2 mb-3">Basic Information</h5>
-          </div>
-          
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Configuration Name *</label>
-            <input type="text" class="form-control" formControlName="name" 
-                   [class.is-invalid]="hasError('name')"
-                   placeholder="Production AWS">
-            <div class="invalid-feedback" *ngIf="hasError('name')">
-              {{ getErrorMessage('name') }}
-            </div>
-            <small class="form-text text-muted">A descriptive name for this configuration</small>
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label class="form-label">AWS Region *</label>
-            <select class="form-select" formControlName="aws_region" 
-                    [class.is-invalid]="hasError('aws_region')">
-              <option *ngFor="let region of awsRegions" [value]="region.value">
-                {{ region.label }}
-              </option>
-            </select>
-            <div class="invalid-feedback" *ngIf="hasError('aws_region')">
-              {{ getErrorMessage('aws_region') }}
-            </div>
-          </div>
+  <div class="form-card" *ngIf="showForm">
+    <h2>{{ editMode ? 'Edit Configuration' : 'New Configuration' }}</h2>
+    
+    <form [formGroup]="configForm" (ngSubmit)="onSubmit()">
+      <div class="form-grid">
+        
+        <div class="form-group">
+          <label>Configuration Name</label>
+          <input formControlName="name" placeholder="e.g. Production Env">
         </div>
 
-        <!-- AWS Credentials -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h5 class="border-bottom pb-2 mb-3">AWS Credentials</h5>
-          </div>
+        <div class="form-group">
+          <label>Region</label>
+          <select formControlName="aws_region">
+            <option value="us-east-1">US East (N. Virginia)</option>
+            <option value="us-east-2">US East (Ohio)</option>
+            <option value="eu-west-1">EU (Ireland)</option>
+            <option value="eu-central-1">EU (Frankfurt)</option>
+          </select>
+        </div>
 
-          <div class="col-md-6 mb-3">
-            <label class="form-label">AWS Access Key *</label>
-            <input type="text" class="form-control font-monospace" formControlName="aws_access_key" 
-                   [class.is-invalid]="hasError('aws_access_key')"
-                   placeholder="AKIAIOSFODNN7EXAMPLE">
-            <div class="invalid-feedback" *ngIf="hasError('aws_access_key')">
-              {{ getErrorMessage('aws_access_key') }}
-            </div>
-          </div>
+        <div class="form-group full-width">
+          <label>Access Key ID</label>
+          <input formControlName="aws_access_key" class="mono" placeholder="AKIA...">
+        </div>
 
-          <div class="col-md-6 mb-3">
-            <label class="form-label">
-              AWS Secret Key {{ isEditing ? '(Leave blank to keep current)' : '*' }}
+        <div class="form-group full-width">
+          <label>Secret Access Key</label>
+          <input type="password" formControlName="aws_secret_key" class="mono">
+        </div>
+
+        <div class="form-group full-width">
+          <label>Session Token (Optional)</label>
+          <textarea formControlName="aws_session_token" rows="3" class="mono"></textarea>
+        </div>
+
+        <div class="form-group checkbox-group">
+            <label>
+                <input type="checkbox" formControlName="is_active"> Set as Active
             </label>
-            <input type="password" class="form-control font-monospace" formControlName="aws_secret_key" 
-                   [class.is-invalid]="hasError('aws_secret_key')"
-                   placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY">
-            <div class="invalid-feedback" *ngIf="hasError('aws_secret_key')">
-              {{ getErrorMessage('aws_secret_key') }}
-            </div>
-          </div>
-
-          <div class="col-12 mb-3">
-            <label class="form-label">AWS Session Token (Optional - for AWS Academy)</label>
-            <textarea class="form-control font-monospace" formControlName="aws_session_token" 
-                      rows="3" placeholder="Session token for temporary credentials"></textarea>
-            <small class="form-text text-muted">Required for AWS Academy or temporary credentials</small>
-          </div>
         </div>
 
-        <!-- VPC and Network Resources -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h5 class="border-bottom pb-2 mb-3">VPC and Network Resources</h5>
-          </div>
+      </div>
 
-          <div class="col-md-6 mb-3">
-            <label class="form-label">VPC ID</label>
-            <input type="text" class="form-control font-monospace" formControlName="vpc_id" 
-                   [class.is-invalid]="hasError('vpc_id')"
-                   placeholder="vpc-xxxxxxxxx">
-            <div class="invalid-feedback" *ngIf="hasError('vpc_id')">
-              {{ getErrorMessage('vpc_id') }}
-            </div>
-            <small class="form-text text-muted">Required for NACL blocking</small>
-          </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="toggleForm()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="loading">
+          {{ editMode ? 'Update & Redirect' : 'Create & Redirect' }}
+        </button>
+      </div>
+    </form>
+  </div>
 
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Security Group ID</label>
-            <input type="text" class="form-control font-monospace" formControlName="security_group_id" 
-                   [class.is-invalid]="hasError('security_group_id')"
-                   placeholder="sg-xxxxxxxxx">
-            <div class="invalid-feedback" *ngIf="hasError('security_group_id')">
-              {{ getErrorMessage('security_group_id') }}
-            </div>
-            <small class="form-text text-muted">Default security group for blocking</small>
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Isolation Security Group ID</label>
-            <input type="text" class="form-control font-monospace" formControlName="isolation_sg_id" 
-                   [class.is-invalid]="hasError('isolation_sg_id')"
-                   placeholder="sg-xxxxxxxxx">
-            <div class="invalid-feedback" *ngIf="hasError('isolation_sg_id')">
-              {{ getErrorMessage('isolation_sg_id') }}
-            </div>
-            <small class="form-text text-muted">Quarantine security group</small>
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Network ACL ID</label>
-            <input type="text" class="form-control font-monospace" formControlName="nacl_id" 
-                   [class.is-invalid]="hasError('nacl_id')"
-                   placeholder="acl-xxxxxxxxx">
-            <div class="invalid-feedback" *ngIf="hasError('nacl_id')">
-              {{ getErrorMessage('nacl_id') }}
-            </div>
-            <small class="form-text text-muted">Network ACL for IP blocking</small>
-          </div>
-        </div>
-
-        <!-- WAF Resources -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h5 class="border-bottom pb-2 mb-3">WAF Resources</h5>
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label class="form-label">WAF Web ACL Name</label>
-            <input type="text" class="form-control" formControlName="waf_web_acl_name" 
-                   placeholder="my-web-acl">
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label class="form-label">WAF Web ACL ID</label>
-            <input type="text" class="form-control font-monospace" formControlName="waf_web_acl_id" 
-                   placeholder="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label class="form-label">WAF IP Set Name</label>
-            <input type="text" class="form-control" formControlName="waf_ip_set_name" 
-                   placeholder="blocked-ips">
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label class="form-label">WAF IP Set ID</label>
-            <input type="text" class="form-control font-monospace" formControlName="waf_ip_set_id" 
-                   placeholder="xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
-          </div>
-        </div>
-
-        <!-- Firewall and Logging -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h5 class="border-bottom pb-2 mb-3">Firewall and Logging</h5>
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Network Firewall ARN</label>
-            <input type="text" class="form-control font-monospace" formControlName="network_firewall_arn" 
-                   placeholder="arn:aws:network-firewall:...">
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label class="form-label">CloudWatch Log Group Name</label>
-            <input type="text" class="form-control font-monospace" formControlName="log_group_name" 
-                   placeholder="/aws/network-firewall/logs">
-          </div>
-        </div>
-
-        <!-- Auto Block Settings -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h5 class="border-bottom pb-2 mb-3">Auto Block Settings</h5>
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" 
-                     formControlName="auto_block_enabled" id="autoBlockEnabled">
-              <label class="form-check-label" for="autoBlockEnabled">
-                <strong>Enable Auto Block</strong>
-              </label>
-            </div>
-            <small class="form-text text-muted">Automatically block IPs when threshold is reached</small>
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Auto Block Threshold</label>
-            <input type="number" class="form-control" formControlName="auto_block_threshold" 
-                   [class.is-invalid]="hasError('auto_block_threshold')"
-                   min="1" max="50">
-            <div class="invalid-feedback" *ngIf="hasError('auto_block_threshold')">
-              {{ getErrorMessage('auto_block_threshold') }}
-            </div>
-            <small class="form-text text-muted">Number of incidents before auto-blocking (1-50)</small>
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" 
-                     formControlName="is_active" id="isActive">
-              <label class="form-check-label" for="isActive">
-                <strong>Set as Active Configuration</strong>
-              </label>
-            </div>
-            <small class="form-text text-muted">Only one configuration can be active at a time</small>
-          </div>
-        </div>
-
-        <!-- Credential Test Result -->
-        <div *ngIf="credentialTestResult" class="alert mb-4" 
-             [class.alert-success]="credentialTestResult.success"
-             [class.alert-danger]="!credentialTestResult.success">
-          <h6 class="alert-heading">
-            <i class="fas" 
-               [class.fa-check-circle]="credentialTestResult.success"
-               [class.fa-exclamation-circle]="!credentialTestResult.success"></i>
-            Credential Test Result
-          </h6>
-          <p class="mb-0">{{ credentialTestResult.message || credentialTestResult.error }}</p>
-          
-          <div *ngIf="credentialTestResult.regions && credentialTestResult.regions.length > 0" 
-               class="mt-3">
-            <strong>Available Regions:</strong>
-            <div class="mt-2">
-              <span class="badge bg-secondary me-1 mb-1" *ngFor="let region of credentialTestResult.regions">
-                {{ region }}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Form Actions -->
-        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-          <button type="button" class="btn btn-secondary" (click)="closeForm()" 
-                  [disabled]="loading">
-            <i class="fas fa-times me-2"></i>Cancel
-          </button>
-          
-          <div>
-            <button type="button" class="btn btn-info me-2" 
-                    *ngIf="isEditing && editingId"
-                    (click)="testCredentials(editingId)" 
-                    [disabled]="loading || testingCredentials">
-              <span *ngIf="testingCredentials" class="spinner-border spinner-border-sm me-2"></span>
-              <i *ngIf="!testingCredentials" class="fas fa-check-circle me-2"></i>
-              Test Credentials
-            </button>
-            
-            <button type="submit" class="btn btn-primary" 
-                    [disabled]="loading || configForm.invalid">
-              <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-              <i *ngIf="!loading" class="fas fa-save me-2"></i>
-              {{ isEditing ? 'Update' : 'Create' }} Configuration
-            </button>
-          </div>
-        </div>
-      </form>
+  <div class="grid-list" *ngIf="!showForm">
+    <div class="card" *ngFor="let config of configurations" [class.active-card]="config.is_active">
+      <div class="card-header">
+        <h3>{{ config.name }}</h3>
+        <span class="badge" *ngIf="config.is_active">ACTIVE</span>
+      </div>
+      <div class="card-body">
+        <p><strong>Region:</strong> {{ config.aws_region }}</p>
+        <p><strong>Key:</strong> {{ config.aws_access_key | slice:0:10 }}...</p>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-sm" (click)="testCredentials(config.id!)" [disabled]="testing">
+            {{ testing ? 'Testing...' : 'Test Connection' }}
+        </button>
+        <button class="btn btn-sm" (click)="editConfiguration(config)">Edit</button>
+        <button class="btn btn-sm btn-danger" (click)="deleteConfiguration(config.id!)">Delete</button>
+      </div>
     </div>
   </div>
+
 </div>

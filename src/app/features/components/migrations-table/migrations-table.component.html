@@ -1,336 +1,293 @@
-<!-- mitigation-actions.component.html -->
-<div class="container-fluid py-4">
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h2 class="mb-1">Mitigation Actions</h2>
-      <p class="text-muted mb-0">Manage and execute AWS security mitigation actions</p>
+<div class="mitigation-container">
+  
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1 class="page-title">Mitigation Actions</h1>
+        <p class="page-subtitle">Manage and execute AWS security mitigation actions</p>
+      </div>
+      <button class="btn btn-primary" (click)="openCreateForm()" [disabled]="loading">
+        <i class="fas fa-plus"></i>
+        <span>Create Action</span>
+      </button>
     </div>
-    <button class="btn btn-primary" (click)="openCreateForm()" [disabled]="loading">
-      <i class="fas fa-plus me-2"></i>Create Action
-    </button>
+  </header>
+
+  <div class="alerts-section" *ngIf="errorMessage || successMessage">
+    <div class="alert alert-danger" *ngIf="errorMessage">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>{{ errorMessage }}</span>
+      <button type="button" class="btn-close" (click)="clearMessages()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="alert alert-success" *ngIf="successMessage">
+      <i class="fas fa-check-circle"></i>
+      <span>{{ successMessage }}</span>
+      <button type="button" class="btn-close" (click)="clearMessages()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
   </div>
 
-  <!-- Global Messages -->
-  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
-    <i class="fas fa-exclamation-circle me-2"></i>{{ errorMessage }}
-    <button type="button" class="btn-close" (click)="clearMessages()" aria-label="Close"></button>
-  </div>
+  <section class="stats-section" *ngIf="!showForm">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-content">
+          <div class="stat-info">
+            <span class="stat-label">Total Actions</span>
+            <span class="stat-value">{{ stats.total }}</span>
+          </div>
+          <div class="stat-icon stat-icon-primary">
+            <i class="fas fa-tasks"></i>
+          </div>
+        </div>
+      </div>
 
-  <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
-    <i class="fas fa-check-circle me-2"></i>{{ successMessage }}
-    <button type="button" class="btn-close" (click)="clearMessages()" aria-label="Close"></button>
-  </div>
+      <div class="stat-card">
+        <div class="stat-content">
+          <div class="stat-info">
+            <span class="stat-label">Pending</span>
+            <span class="stat-value">{{ stats.pending }}</span>
+          </div>
+          <div class="stat-icon stat-icon-warning">
+            <i class="fas fa-clock"></i>
+          </div>
+        </div>
+      </div>
 
-  <!-- Statistics Cards -->
-  <div class="row mb-4" *ngIf="!showForm">
-    <div class="col-md-3 col-sm-6 mb-3">
-      <div class="card stat-card">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <p class="text-muted mb-1">Total Actions</p>
-              <h3 class="mb-0">{{ stats.total }}</h3>
-            </div>
-            <div class="stat-icon bg-primary">
-              <i class="fas fa-tasks"></i>
-            </div>
+      <div class="stat-card">
+        <div class="stat-content">
+          <div class="stat-info">
+            <span class="stat-label">Completed</span>
+            <span class="stat-value">{{ stats.completed }}</span>
+          </div>
+          <div class="stat-icon stat-icon-success">
+            <i class="fas fa-check-circle"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-content">
+          <div class="stat-info">
+            <span class="stat-label">Success Rate</span>
+            <span class="stat-value">{{ getSuccessRate() }}%</span>
+          </div>
+          <div class="stat-icon stat-icon-info">
+            <i class="fas fa-chart-line"></i>
           </div>
         </div>
       </div>
     </div>
+  </section>
 
-    <div class="col-md-3 col-sm-6 mb-3">
-      <div class="card stat-card">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <p class="text-muted mb-1">Pending</p>
-              <h3 class="mb-0">{{ stats.pending }}</h3>
-            </div>
-            <div class="stat-icon bg-warning">
-              <i class="fas fa-clock"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-3 col-sm-6 mb-3">
-      <div class="card stat-card">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <p class="text-muted mb-1">Completed</p>
-              <h3 class="mb-0">{{ stats.completed }}</h3>
-            </div>
-            <div class="stat-icon bg-success">
-              <i class="fas fa-check-circle"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-3 col-sm-6 mb-3">
-      <div class="card stat-card">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <p class="text-muted mb-1">Success Rate</p>
-              <h3 class="mb-0">{{ getSuccessRate() }}%</h3>
-            </div>
-            <div class="stat-icon bg-info">
-              <i class="fas fa-chart-line"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Filters -->
-  <div class="card mb-4" *ngIf="!showForm">
-    <div class="card-body">
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label">Status</label>
-          <select class="form-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
+  <section class="filters-section" *ngIf="!showForm">
+    <div class="filters-card">
+      <div class="filters-grid">
+        <div class="filter-group">
+          <label class="filter-label">Status</label>
+          <select class="filter-select" [(ngModel)]="selectedStatus" (change)="onFilterChange()">
             <option *ngFor="let option of getStatusOptions()" [value]="option.value">
               {{ option.label }}
             </option>
           </select>
         </div>
 
-        <div class="col-md-4">
-          <label class="form-label">Action Type</label>
-          <select class="form-select" [(ngModel)]="selectedActionType" (change)="onFilterChange()">
+        <div class="filter-group">
+          <label class="filter-label">Action Type</label>
+          <select class="filter-select" [(ngModel)]="selectedActionType" (change)="onFilterChange()">
             <option *ngFor="let option of getActionTypeFilterOptions()" [value]="option.value">
               {{ option.label }}
             </option>
           </select>
         </div>
 
-        <div class="col-md-4">
-          <label class="form-label">Search</label>
-          <input type="text" class="form-control" placeholder="Search target or description..."
-                 [(ngModel)]="searchTerm" (input)="onFilterChange()">
+        <div class="filter-group">
+          <label class="filter-label">Search</label>
+          <input type="text" 
+                 class="filter-input" 
+                 placeholder="Search target or description..."
+                 [(ngModel)]="searchTerm" 
+                 (input)="onFilterChange()">
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Loading Spinner -->
-  <div *ngIf="loading && !showForm" class="text-center py-5">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading...</span>
+  <div class="loading-section" *ngIf="loading && !showForm">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <span class="loading-text">Loading mitigations...</span>
     </div>
   </div>
 
-  <!-- Mitigation Actions List -->
-  <div *ngIf="!showForm && !loading" class="row">
-    <div class="col-12" *ngIf="filteredMitigations.length === 0">
-      <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>
-        No mitigation actions found. Create your first action to get started.
-      </div>
+  <section class="mitigations-section" *ngIf="!showForm && !loading">
+    
+    <div class="empty-state" *ngIf="filteredMitigations.length === 0">
+      <i class="fas fa-inbox"></i>
+      <h3>No mitigation actions found</h3>
+      <p>Create your first action to get started</p>
     </div>
 
-    <div class="col-12" *ngFor="let mitigation of filteredMitigations">
-      <div class="card mb-3 mitigation-card">
-        <div class="card-body">
-          <div class="row align-items-center">
-            <!-- Action Info -->
-            <div class="col-md-5">
-              <div class="d-flex align-items-start">
-                <div class="action-icon me-3">
-                  <i class="fas" [ngClass]="mitigationService.getActionTypeIcon(mitigation.action_type)"></i>
-                </div>
-                <div>
-                  <h5 class="mb-1">{{ mitigationService.getActionTypeLabel(mitigation.action_type) }}</h5>
-                  <p class="text-muted mb-1">
-                    <i class="fas fa-crosshairs me-1"></i>
-                    <strong>Target:</strong> <code>{{ mitigation.target_value }}</code>
-                  </p>
-                  <p class="text-muted mb-0">
-                    <i class="fas fa-globe me-1"></i>
-                    <strong>Region:</strong> {{ mitigationService.getRegionLabel(mitigation.aws_region) }}
-                  </p>
-                </div>
+    <div class="mitigation-list">
+      <article class="mitigation-card" *ngFor="let mitigation of filteredMitigations">
+        
+        <div class="mitigation-content">
+          
+          <div class="mitigation-main">
+            <div class="mitigation-icon">
+              <i class="fas" [ngClass]="mitigationService.getActionTypeIcon(mitigation.action_type)"></i>
+            </div>
+            <div class="mitigation-details">
+              <h3 class="mitigation-title">{{ mitigationService.getActionTypeLabel(mitigation.action_type) }}</h3>
+              <div class="mitigation-meta">
+                <span class="meta-item">
+                  <i class="fas fa-crosshairs"></i>
+                  <strong>Target:</strong>
+                  <code>{{ mitigation.target_value }}</code>
+                </span>
+                <span class="meta-item">
+                  <i class="fas fa-globe"></i>
+                  <strong>Region:</strong>
+                  <span>{{ mitigationService.getRegionLabel(mitigation.aws_region) }}</span>
+                </span>
               </div>
             </div>
+          </div>
 
-            <!-- Description -->
-            <div class="col-md-3">
-              <p class="text-muted small mb-1"><i class="fas fa-info-circle me-1"></i>Description</p>
-              <p class="mb-0">{{ mitigation.description }}</p>
+          <div class="mitigation-description">
+            <div class="description-label">
+              <i class="fas fa-info-circle"></i> Description
             </div>
+            <p class="description-text">{{ mitigation.description }}</p>
+          </div>
 
-            <!-- Status & Metadata -->
-            <div class="col-md-2">
-              <span class="mb-2 d-inline-block" 
-                    [ngClass]="mitigationService.getStatusBadgeClass(mitigation.status)">
-                <i class="fas me-1" [ngClass]="mitigationService.getStatusIcon(mitigation.status)"></i>
-                {{ mitigation.status }}
-              </span>
-              <p class="text-muted small mb-1">
-                <i class="fas fa-user me-1"></i>{{ mitigation.initiated_by_username }}
-              </p>
-              <p class="text-muted small mb-0">
-                <i class="fas fa-clock me-1"></i>{{ formatDate(mitigation.created_at) }}
-              </p>
+          <div class="mitigation-status">
+            <span class="status-badge" [ngClass]="mitigationService.getStatusBadgeClass(mitigation.status)">
+              <i class="fas" [ngClass]="mitigationService.getStatusIcon(mitigation.status)"></i>
+              {{ mitigation.status }}
+            </span>
+            
+            <div class="meta-item">
+              <i class="fas fa-user"></i> {{ mitigation.initiated_by_username }}
             </div>
+            <div class="meta-item">
+              <i class="fas fa-clock"></i> {{ formatDate(mitigation.created_at) }}
+            </div>
+          </div>
 
-            <!-- Actions -->
-            <div class="col-md-2 text-end">
-              <div class="btn-group-vertical w-100" role="group">
-                <button class="btn btn-sm btn-success mb-2" 
-                        *ngIf="canExecute(mitigation)"
-                        (click)="executeMitigation(mitigation)"
-                        [disabled]="isExecuting(mitigation.id!)">
-                  <span *ngIf="isExecuting(mitigation.id!)" class="spinner-border spinner-border-sm me-1"></span>
-                  <i *ngIf="!isExecuting(mitigation.id!)" class="fas fa-play me-1"></i>
-                  Execute
-                </button>
-                
-                <button class="btn btn-sm btn-outline-primary mb-2" 
+          <div class="mitigation-status" style="align-items: flex-end;"> <button class="btn btn-primary" 
+                    style="width: 100%; justify-content: center;"
+                    *ngIf="canExecute(mitigation)"
+                    (click)="executeMitigation(mitigation)"
+                    [disabled]="isExecuting(mitigation.id!)">
+              <span *ngIf="isExecuting(mitigation.id!)" class="btn-spinner"></span>
+              <i *ngIf="!isExecuting(mitigation.id!)" class="fas fa-play"></i>
+              <span>Execute</span>
+            </button>
+            
+            <div style="display: flex; gap: 0.5rem; width: 100%;">
+                <button class="btn btn-secondary" 
+                        style="flex: 1; justify-content: center;"
                         (click)="openEditForm(mitigation)"
                         [disabled]="mitigation.status === 'in_progress'">
-                  <i class="fas fa-edit me-1"></i>Edit
+                <i class="fas fa-edit"></i>
                 </button>
                 
-                <button class="btn btn-sm btn-outline-danger" 
+                <button class="btn btn-secondary" 
+                        style="flex: 1; justify-content: center; border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;"
                         (click)="deleteMitigation(mitigation)"
                         [disabled]="mitigation.status === 'in_progress'">
-                  <i class="fas fa-trash me-1"></i>Delete
+                <i class="fas fa-trash"></i>
                 </button>
-              </div>
             </div>
           </div>
 
-          <!-- Error Message -->
-          <div *ngIf="mitigation.status === 'failed' && mitigation.error_message" 
-               class="alert alert-danger mt-3 mb-0">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            <strong>Error:</strong> {{ mitigation.error_message }}
-          </div>
-
-          <!-- Success Message -->
-          <div *ngIf="mitigation.status === 'completed' && mitigation.error_message" 
-               class="alert alert-success mt-3 mb-0">
-            <i class="fas fa-check-circle me-2"></i>
-            {{ mitigation.error_message }}
-          </div>
+        </div> <div class="alert alert-danger" style="margin-top: 1rem;" *ngIf="mitigation.status === 'failed' && mitigation.error_message">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span><strong>Error:</strong> {{ mitigation.error_message }}</span>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- Create/Edit Form -->
-  <div *ngIf="showForm" class="card">
-    <div class="card-header">
-      <h4 class="mb-0">{{ isEditing ? 'Edit' : 'Create' }} Mitigation Action</h4>
+        <div class="alert alert-success" style="margin-top: 1rem;" *ngIf="mitigation.status === 'completed' && mitigation.error_message">
+          <i class="fas fa-check-circle"></i>
+          <span>{{ mitigation.error_message }}</span>
+        </div>
+
+      </article>
     </div>
-    <div class="card-body">
+  </section>
+
+  <section class="filters-section" *ngIf="showForm"> <div class="filters-card" style="max-width: 800px; margin: 0 auto;">
+      
+      <div class="page-header" style="margin-bottom: 1.5rem;">
+        <h2 class="page-title" style="font-size: 1.8rem;">
+            {{ isEditing ? 'Edit' : 'Create' }} Mitigation Action
+        </h2>
+      </div>
+      
       <form [formGroup]="mitigationForm" (ngSubmit)="onSubmit()">
         
-        <!-- Action Type & Region -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h5 class="border-bottom pb-2 mb-3">Action Configuration</h5>
-          </div>
-
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Action Type *</label>
-            <select class="form-select" formControlName="action_type"
-                    [class.is-invalid]="hasError('action_type')">
+        <div class="filters-grid" style="margin-bottom: 1.5rem;">
+          <div class="filter-group">
+            <label class="filter-label">Action Type *</label>
+            <select class="filter-select" formControlName="action_type">
               <option *ngFor="let type of getActionTypeOptions()" [value]="type.value">
-                <i class="fas" [ngClass]="type.icon"></i> {{ type.label }}
+                {{ type.label }}
               </option>
             </select>
-            <div class="invalid-feedback" *ngIf="hasError('action_type')">
-              {{ getErrorMessage('action_type') }}
-            </div>
           </div>
 
-          <div class="col-md-6 mb-3">
-            <label class="form-label">AWS Region *</label>
-            <select class="form-select" formControlName="aws_region"
-                    [class.is-invalid]="hasError('aws_region')">
+          <div class="filter-group">
+            <label class="filter-label">AWS Region *</label>
+            <select class="filter-select" formControlName="aws_region">
               <option *ngFor="let region of getRegionOptions()" [value]="region.value">
                 {{ region.label }}
               </option>
             </select>
-            <div class="invalid-feedback" *ngIf="hasError('aws_region')">
-              {{ getErrorMessage('aws_region') }}
-            </div>
           </div>
         </div>
 
-        <!-- Target & Rule Number -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h5 class="border-bottom pb-2 mb-3">Target Configuration</h5>
-          </div>
-
-          <div class="col-md-8 mb-3">
-            <label class="form-label">Target Value *</label>
-            <input type="text" class="form-control" formControlName="target_value"
-                   [class.is-invalid]="hasError('target_value')"
+        <div class="filters-grid" style="margin-bottom: 1.5rem;">
+          <div class="filter-group" [style.grid-column]="shouldShowRuleNumber() ? 'span 1' : 'span 2'">
+            <label class="filter-label">Target Value *</label>
+            <input type="text" class="filter-input" 
+                   formControlName="target_value"
                    [placeholder]="getTargetPlaceholder()">
-            <div class="invalid-feedback" *ngIf="hasError('target_value')">
-              {{ getErrorMessage('target_value') }}
-            </div>
-            <small class="form-text text-muted">
-              Enter IP address, instance ID, country codes, or rate limit value depending on action type
+            <small style="color: #94a3b8; font-size: 0.8rem; margin-top: 4px;">
+                IP address, instance ID, etc.
             </small>
           </div>
 
-          <div class="col-md-4 mb-3" *ngIf="shouldShowRuleNumber()">
-            <label class="form-label">NACL Rule Number *</label>
-            <input type="number" class="form-control" formControlName="rule_number"
-                   [class.is-invalid]="hasError('rule_number')"
-                   min="1" max="32766">
-            <div class="invalid-feedback" *ngIf="hasError('rule_number')">
-              {{ getErrorMessage('rule_number') }}
-            </div>
-            <small class="form-text text-muted">1-32766</small>
+          <div class="filter-group" *ngIf="shouldShowRuleNumber()">
+            <label class="filter-label">NACL Rule Number *</label>
+            <input type="number" class="filter-input" formControlName="rule_number">
           </div>
         </div>
 
-        <!-- Description -->
-        <div class="row mb-4">
-          <div class="col-12">
-            <h5 class="border-bottom pb-2 mb-3">Description</h5>
-          </div>
-
-          <div class="col-12 mb-3">
-            <label class="form-label">Description *</label>
-            <textarea class="form-control" formControlName="description"
-                      [class.is-invalid]="hasError('description')"
-                      rows="4"
-                      placeholder="Describe the reason for this mitigation action and expected outcome"></textarea>
-            <div class="invalid-feedback" *ngIf="hasError('description')">
-              {{ getErrorMessage('description') }}
-            </div>
-          </div>
+        <div class="filter-group" style="margin-bottom: 2rem;">
+          <label class="filter-label">Description *</label>
+          <textarea class="filter-input" 
+                    formControlName="description" 
+                    rows="4"
+                    style="resize: vertical; min-height: 100px;"
+                    placeholder="Describe the reason for this action..."></textarea>
         </div>
 
-        <!-- Form Actions -->
-        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-          <button type="button" class="btn btn-secondary" (click)="closeForm()" 
-                  [disabled]="loading">
-            <i class="fas fa-times me-2"></i>Cancel
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+          <button type="button" class="btn btn-secondary" (click)="closeForm()" [disabled]="loading">
+            Cancel
           </button>
           
-          <button type="submit" class="btn btn-primary" 
-                  [disabled]="loading || mitigationForm.invalid">
-            <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
-            <i *ngIf="!loading" class="fas fa-save me-2"></i>
-            {{ isEditing ? 'Update' : 'Create' }} Action
+          <button type="submit" class="btn btn-primary" [disabled]="loading || mitigationForm.invalid">
+            <span *ngIf="loading" class="btn-spinner"></span>
+            <span>{{ isEditing ? 'Update' : 'Create' }} Action</span>
           </button>
         </div>
+
       </form>
     </div>
-  </div>
+  </section>
+
 </div>
