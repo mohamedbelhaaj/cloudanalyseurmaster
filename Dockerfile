@@ -1,51 +1,21 @@
-# Étape 1 : Build
-FROM node:22-alpine AS build
+# ---- Build Angular & Run Dev Server ----
+FROM node:22
 
+# Créer un dossier de travail
 WORKDIR /app
 
-# Copier les fichiers de dépendances
+# Copier uniquement les fichiers nécessaires pour installer les dépendances
 COPY package*.json ./
 
 # Installer les dépendances
-RUN npm ci --legacy-peer-deps
+RUN npm install -g @angular/cli
+RUN npm install
 
-# Copier le code source
+# Copier tout le projet Angular
 COPY . .
 
-# Build l'application Angular en production
-RUN npm run build -- --configuration production
+# Exposer le port Angular par défaut
+EXPOSE 4200
 
-# Étape 2 : Production avec Nginx
-FROM nginx:alpine
-
-# Copier les fichiers buildés depuis l'étape de build
-COPY --from=build /app/dist/threat-analysis-app/browser /usr/share/nginx/html
-
-# Créer une configuration Nginx inline
-RUN echo 'server { \n\
-    listen 80; \n\
-    server_name localhost; \n\
-    root /usr/share/nginx/html; \n\
-    index index.html; \n\
-    location / { \n\
-        try_files $uri $uri/ /index.html; \n\
-    } \n\
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ { \n\
-        expires 1y; \n\
-        add_header Cache-Control "public, immutable"; \n\
-    } \n\
-    gzip on; \n\
-    gzip_vary on; \n\
-    gzip_min_length 1024; \n\
-    gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json; \n\
-}' > /etc/nginx/conf.d/default.conf
-
-# Exposer le port 80
-EXPOSE 80
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s \
-  CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
-
-# Démarrer Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Lancer ng serve en mode développement, accessible depuis l’extérieur
+CMD ["ng", "serve", "--host", "0.0.0.0", "--port", "4200"]
