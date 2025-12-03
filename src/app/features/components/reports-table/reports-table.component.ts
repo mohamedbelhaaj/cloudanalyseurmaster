@@ -78,16 +78,26 @@ export class ReportsTableComponent implements OnInit {
 
     const filters = this.getActiveFilters();
 
+    console.log('Loading reports - Page:', page, 'Filters:', filters);
+
     this.reportsService.getReports(page, filters).subscribe({
       next: (response) => {
-        this.reports = response.results;
-        this.totalCount = response.count;
+        console.log('API Response:', response);
+        
+        // Ensure results is always an array
+        this.reports = Array.isArray(response.results) ? response.results : [];
+        this.totalCount = response.count || 0;
         this.totalPages = Math.ceil(this.totalCount / this.pageSize);
         this.loading = false;
+        
+        console.log('Reports loaded:', this.reports.length);
+        console.log('Total count:', this.totalCount);
+        console.log('Total pages:', this.totalPages);
       },
       error: (error: Error) => {
         console.error('Erreur lors du chargement des rapports:', error);
-        this.errorMessage = error.message;
+        this.errorMessage = error.message || 'Erreur lors du chargement des rapports';
+        this.reports = [];
         this.loading = false;
       }
     });
@@ -152,7 +162,7 @@ export class ReportsTableComponent implements OnInit {
       },
       error: (error: Error) => {
         console.error('Erreur lors de la suppression:', error);
-        this.errorMessage = error.message;
+        this.errorMessage = error.message || 'Erreur lors de la suppression';
       }
     });
   }
@@ -190,7 +200,16 @@ export class ReportsTableComponent implements OnInit {
     });
   }
 
-  // Helper methods
+  // Helper methods for safe data access
+  getAnalystUsername(report: Report): string {
+    return report.analyst?.username || 'N/A';
+  }
+
+  getAssignedUsername(report: Report): string {
+    return report.assigned_to?.username || 'Non assigné';
+  }
+
+  // Helper methods for styling
   getSeverityClass(severity: string): string {
     const map: { [key: string]: string } = {
       'low': 'severity-low',
@@ -222,7 +241,7 @@ export class ReportsTableComponent implements OnInit {
       'critical': 'Critique',
       'informational': 'Informatif'
     };
-    return map[severity?.toLowerCase()] || severity;
+    return map[severity?.toLowerCase()] || severity || 'N/A';
   }
 
   getStatusLabel(status: string): string {
@@ -234,7 +253,7 @@ export class ReportsTableComponent implements OnInit {
       'archived': 'Archivé',
       'false_positive': 'Faux positif'
     };
-    return map[status?.toLowerCase()] || status;
+    return map[status?.toLowerCase()] || status || 'N/A';
   }
 
   getInputTypeLabel(type: string): string {
@@ -247,19 +266,23 @@ export class ReportsTableComponent implements OnInit {
       'file': 'Fichier',
       'text': 'Texte'
     };
-    return map[type?.toLowerCase()] || type;
+    return map[type?.toLowerCase()] || type || 'N/A';
   }
 
   formatDate(dateString: string): string {
     if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('fr-FR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'N/A';
+    }
   }
 
   getPaginationRange(): number[] {
@@ -274,6 +297,6 @@ export class ReportsTableComponent implements OnInit {
   }
 
   trackByReportId(index: number, report: Report): string {
-    return report.id;
+    return report?.id || index.toString();
   }
 }

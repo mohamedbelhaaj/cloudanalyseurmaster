@@ -142,6 +142,9 @@
         <div class="empty-icon">📋</div>
         <h3>Aucun rapport disponible</h3>
         <p>Il n'y a actuellement aucun rapport à afficher.</p>
+        <p *ngIf="totalCount > 0" class="text-muted">
+          Il y a {{ totalCount }} rapports au total, mais aucun sur cette page.
+        </p>
       </div>
 
       <!-- Table -->
@@ -166,13 +169,13 @@
               <tr *ngFor="let report of reports; trackBy: trackByReportId" class="table-row">
                 <!-- ID -->
                 <td class="text-center">
-                  <span class="id-badge">#{{ report.id.slice(0, 8) }}</span>
+                  <span class="id-badge">#{{ report.id?.slice(0, 8) || 'N/A' }}</span>
                 </td>
 
                 <!-- Input Value -->
-                <td class="input-value" [title]="report.input_value">
+                <td class="input-value" [title]="report.input_value || 'N/A'">
                   <div class="truncate">
-                    {{ report.input_value }}
+                    {{ report.input_value || 'N/A' }}
                   </div>
                 </td>
 
@@ -193,7 +196,7 @@
                 <!-- Threat Score -->
                 <td class="text-center">
                   <div class="score-badge" [ngClass]="getSeverityClass(report.severity)">
-                    {{ report.threat_score | number:'1.0-0' }}
+                    {{ report.threat_score != null ? (report.threat_score | number:'1.0-0') : '0' }}
                   </div>
                 </td>
 
@@ -208,7 +211,7 @@
                 <td>
                   <div class="user-info">
                     <span class="user-icon">👤</span>
-                    <span>{{ report.analyst.username }}</span>
+                    <span>{{ getAnalystUsername(report) }}</span>
                   </div>
                 </td>
 
@@ -216,7 +219,7 @@
                 <td>
                   <div class="user-info">
                     <span class="user-icon">🎯</span>
-                    <span>{{ report.assigned_to.username }}</span>
+                    <span>{{ getAssignedUsername(report) }}</span>
                   </div>
                 </td>
 

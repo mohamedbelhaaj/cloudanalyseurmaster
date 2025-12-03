@@ -12,6 +12,8 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class NavbarComponent {
   private authService = inject(AuthService);
+    isDashboardLoaded = false;
+
   
   currentUser$ = this.authService.currentUser$;
 
